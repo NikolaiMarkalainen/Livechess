@@ -88,6 +88,29 @@ const drawChessBoard = () => {
   }
 };
 
+const movePiece = () => {
+  const board = document.querySelector<HTMLDivElement>(".board-grid")!;
+  let selectedSquare: Element | null;
+  board.addEventListener("click", (e) => {
+    const square = (e.target as HTMLElement).closest("[data-square]");
+    if (!square) return;
+    console.log(selectedSquare);
+    if (!selectedSquare) {
+      if (square.querySelector("img")) {
+        selectedSquare = square;
+        console.log(selectedSquare);
+      }
+    } else {
+      const piece = selectedSquare.querySelector("img");
+      if (piece) {
+        square.appendChild(piece);
+        selectedSquare = null;
+      }
+    }
+    selectedSquare?.classList.remove("selected");
+  });
+};
+
 board.innerHTML = `
   <div class="board-wrapper">
     <div class="board-numbers"></div>
@@ -99,3 +122,4 @@ board.innerHTML = `
 drawChessBoard();
 drawChessPieces("white");
 drawChessPieces("black");
+movePiece();
