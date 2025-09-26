@@ -27,6 +27,7 @@ for (let row = 0; row < 8; row++) {
   numberBox.textContent = (8 - row).toString();
   for (let col = 0; col < 8; col++) {
     const square = document.createElement("div");
+    square.dataset.square = `${boardValues[col]}${8 - row}`;
     if ((row + col) % 2 === 0) {
       square.className = "board-primary";
     } else {
