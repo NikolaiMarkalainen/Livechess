@@ -1,21 +1,87 @@
 import "./style.css";
-import type { Pieces, Sides } from "./types";
+import type { boardPositions, Pieces, Sides } from "./types";
+
 const board = document.querySelector<HTMLDivElement>("#board")!;
+const boardValues = ["A", "B", "C", "D", "E", "F", "G", "H"];
 
-const validateMove = (square: HTMLElement, piece: HTMLElement) => {
-  // pawn
-  // can only move forward only exception if +1 left and right the pawn is there or collision
-  // have to query elements where they are located possible allowed locations
-  switch (piece.dataset.piece) {
-    case "pawn":
-      console.log("is pawn", piece, square);
-
-      return true;
-  }
+const boardSquareToNumber = (square: string | undefined): boardPositions => {
+  console.log(square);
+  if (!square) return { row: 0, column: 0 };
+  const column = boardValues.indexOf(square[0].toUpperCase()) + 1;
+  return {
+    column: column,
+    row: Number(square[1]),
+  };
 };
 
+const setNewSquare = (targetSquare: HTMLElement, pieceSquare: HTMLElement, capture: boolean) => {
+  // fetch the selected piece
+  console.log(pieceSquare);
+  const movingPiece = document.querySelector<HTMLImageElement>(`[data-selected="true"]`);
+  if (!movingPiece) return;
+  // update the piece position with new one to monitor whats happening
+  movingPiece.dataset.square = targetSquare.dataset.square;
+  // the piece is no longer moving we need to remove the selected flag from it
+
+  if (capture) {
+    if (targetSquare instanceof HTMLImageElement) {
+      targetSquare.remove();
+      const cellDiv = document.querySelector<HTMLDivElement>(`[data-square=${targetSquare.dataset.square}]`);
+      if (!cellDiv) return;
+      cellDiv.appendChild(pieceSquare);
+      return;
+    }
+  }
+  clearSelected();
+  targetSquare.appendChild(pieceSquare);
+};
+
+const clearSelected = () => {
+  const movingPiece = document.querySelector<HTMLImageElement>(`[data-selected="true"]`);
+  delete movingPiece?.dataset.selected;
+};
+
+const validateMove = (target: HTMLElement, piece: HTMLElement) => {
+  const pieceSquare = boardSquareToNumber(piece.dataset.square);
+  const targetSquare = boardSquareToNumber(target.dataset.square);
+  console.log(target instanceof HTMLImageElement);
+
+  switch (piece.dataset.piece) {
+    case "pawn":
+      // we are moving on correct column this is allowed
+      if (pieceSquare.column === targetSquare.column) {
+        // create logic for pawns moving forward on the board with substraction
+        const columnDifference =
+          piece.dataset.side === "white" ? targetSquare.row - pieceSquare.row : pieceSquare.row - targetSquare.row;
+
+        const startingRow = piece.dataset.side === "white" ? 2 : 7;
+        // when walking forward with a pawn we always need to check whether there is collision
+        if (target instanceof HTMLImageElement) {
+          clearSelected();
+          return false;
+        }
+        // allow starterOpening to move 2 rows at once
+        if (columnDifference === 1 || (columnDifference === 2 && pieceSquare.row === startingRow)) {
+          setNewSquare(target, piece, false);
+          return true;
+        }
+        clearSelected();
+        return false;
+      }
+      // capture event
+      if (pieceSquare.column - 1 === targetSquare.column || pieceSquare.column + 1 === targetSquare.column) {
+        if (
+          target instanceof HTMLImageElement &&
+          // avoid taking own pieces lol
+          target.dataset.side !== piece.dataset.side
+        ) {
+          setNewSquare(target, piece, true);
+          return true;
+        }
+      }
+  }
+};
 const drawChessPieces = (side: Sides) => {
-  const boardValues = ["A", "B", "C", "D", "E", "F", "G", "H"];
   const knightSquares = side === "white" ? ["B1", "G1"] : ["B8", "G8"];
   const bishopSquares = side === "white" ? ["C1", "F1"] : ["C8", "F8"];
   const rookSquares = side === "white" ? ["A1", "H1"] : ["A8", "H8"];
@@ -23,25 +89,19 @@ const drawChessPieces = (side: Sides) => {
   const kingSquare = side === "white" ? ["E1"] : ["E8"];
   const pawnRow = side === "white" ? "2" : "7";
 
-  const setPieceDataSet = (
-    side: Sides,
-    piece: Pieces,
-    square: string
-  ): HTMLImageElement => {
+  const setPieceDataSet = (side: Sides, piece: Pieces, square: string): HTMLImageElement => {
     const element = document.createElement("img");
     element.alt = `${piece}-${side}`;
     element.src = `/pieces/${piece}-${side}.png`;
     element.dataset.piece = piece;
     element.dataset.side = side;
-    element.dataset.piece_position = square;
+    element.dataset.square = square;
     return element;
   };
 
   // pawns rendered
   for (let i = 0; i < 8; i++) {
-    let square = document.querySelector(
-      `[data-square="${boardValues[i]}${pawnRow}"]`
-    )!;
+    let square = document.querySelector(`[data-square="${boardValues[i]}${pawnRow}"]`)!;
     const pawn = setPieceDataSet(side, "pawn", `${boardValues[i]}${pawnRow}`);
     square.appendChild(pawn);
   }
@@ -75,8 +135,7 @@ const drawChessPieces = (side: Sides) => {
 const drawChessBoard = () => {
   const boardGrid = document.querySelector<HTMLDivElement>(".board-grid")!;
   const boardText = document.querySelector<HTMLDivElement>(".board-text")!;
-  const boardNumbers =
-    document.querySelector<HTMLDivElement>(".board-numbers")!;
+  const boardNumbers = document.querySelector<HTMLDivElement>(".board-numbers")!;
 
   const boardValues = ["A", "B", "C", "D", "E", "F", "G", "H"];
   boardValues.forEach((value) => {
@@ -107,7 +166,7 @@ const movePiece = () => {
   let selectedSquare: HTMLElement | null;
   board.addEventListener("click", (e) => {
     //general square on our grid can be div or img of a piece
-    const square = e.target as HTMLElement;
+    let square = e.target as HTMLElement | null;
     if (!square) return;
 
     if (!selectedSquare) {
@@ -116,13 +175,15 @@ const movePiece = () => {
       // selected square
       if (square instanceof HTMLImageElement) {
         selectedSquare = square;
+        selectedSquare.dataset.selected = "true";
       } // instance of when selected square actually exists so here we need to validate our move
     } else {
       // we have to validate where we are going from which square
+      console.log(square, selectedSquare);
       const isValidMove = validateMove(square, selectedSquare);
       if (isValidMove) {
-        square.appendChild(selectedSquare);
         selectedSquare = null;
+        return;
       } else {
         // refresh selectedsquare so we dont get stuck on one piece and unable to move
         selectedSquare = null;
