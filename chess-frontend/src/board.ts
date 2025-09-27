@@ -21,7 +21,6 @@ const setNewSquare = (targetSquare: HTMLElement, capture: boolean) => {
   if (capture) {
     if (targetSquare instanceof HTMLImageElement) {
       const cellDiv = document.querySelector<HTMLDivElement>(`div[data-square=${targetSquare.dataset.square}]`);
-      console.log(cellDiv, targetSquare, movingPiece);
       if (!cellDiv) return;
       cellDiv.replaceChild(movingPiece, targetSquare);
       movingPiece.dataset.square = targetSquare.dataset.square;
@@ -38,9 +37,18 @@ const setNewSquare = (targetSquare: HTMLElement, capture: boolean) => {
 
 const clearSelected = () => {
   const movingPiece = document.querySelector<HTMLImageElement>(`img[data-selected="true"]`);
-  console.log(movingPiece);
   delete movingPiece?.dataset.selected;
-  console.log(movingPiece);
+};
+
+const collidesWithPieces = (target: HTMLElement, piece: HTMLElement) => {
+  // check from pos 1 to pos 2 for different pieces so for example we need rook bishop and queen
+
+  if (piece.dataset.piece === "bishop") {
+    // eval destination to current position
+    // the grid is 8 by 8 so we check where it can realistically move
+    // set flag to blocker if path is blocked
+    // set positions where it can move possibly an array of max pos moves ?
+  }
 };
 
 const validateMove = (target: HTMLElement, piece: HTMLElement) => {
@@ -199,7 +207,6 @@ const movePiece = () => {
   board.addEventListener("click", (e) => {
     //general square on our grid can be div or img of a piece
     let square = e.target as HTMLElement | null;
-    console.log(square);
     if (!square) return;
 
     if (!selectedSquare) {
