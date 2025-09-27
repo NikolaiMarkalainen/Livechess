@@ -14,30 +14,31 @@ const boardSquareToNumber = (square: string | undefined): boardPositions => {
   };
 };
 
-const setNewSquare = (targetSquare: HTMLElement, pieceSquare: HTMLElement, capture: boolean) => {
+const setNewSquare = (targetSquare: HTMLElement, capture: boolean) => {
   // fetch the selected piece
-  console.log(pieceSquare);
-  const movingPiece = document.querySelector<HTMLImageElement>(`[data-selected="true"]`);
+  const movingPiece = document.querySelector<HTMLImageElement>(`img[data-selected="true"]`);
   if (!movingPiece) return;
-  // update the piece position with new one to monitor whats happening
-  movingPiece.dataset.square = targetSquare.dataset.square;
-  // the piece is no longer moving we need to remove the selected flag from it
 
   if (capture) {
     if (targetSquare instanceof HTMLImageElement) {
-      targetSquare.remove();
-      const cellDiv = document.querySelector<HTMLDivElement>(`[data-square=${targetSquare.dataset.square}]`);
+      const cellDiv = document.querySelector<HTMLDivElement>(`div[data-square=${targetSquare.dataset.square}]`);
+      console.log(cellDiv, targetSquare, movingPiece);
       if (!cellDiv) return;
-      cellDiv.appendChild(pieceSquare);
+      cellDiv.replaceChild(movingPiece, targetSquare);
+      movingPiece.dataset.square = targetSquare.dataset.square;
+      clearSelected();
       return;
     }
   }
+  // update the piece position with new one to monitor whats happening
+  // the piece is no longer moving we need to remove the selected flag from it
+  movingPiece.dataset.square = targetSquare.dataset.square;
   clearSelected();
-  targetSquare.appendChild(pieceSquare);
+  targetSquare.appendChild(movingPiece);
 };
 
 const clearSelected = () => {
-  const movingPiece = document.querySelector<HTMLImageElement>(`[data-selected="true"]`);
+  const movingPiece = document.querySelector<HTMLImageElement>(`img[data-selected="true"]`);
   delete movingPiece?.dataset.selected;
 };
 
@@ -62,7 +63,7 @@ const validateMove = (target: HTMLElement, piece: HTMLElement) => {
         }
         // allow starterOpening to move 2 rows at once
         if (columnDifference === 1 || (columnDifference === 2 && pieceSquare.row === startingRow)) {
-          setNewSquare(target, piece, false);
+          setNewSquare(target, false);
           return true;
         }
         clearSelected();
@@ -75,10 +76,15 @@ const validateMove = (target: HTMLElement, piece: HTMLElement) => {
           // avoid taking own pieces lol
           target.dataset.side !== piece.dataset.side
         ) {
-          setNewSquare(target, piece, true);
+          setNewSquare(target, true);
           return true;
         }
       }
+    // case "knight":
+    //   //knight can move in L shape so +2 in one axis and 1 on the other
+    //   if (pieceSquare.column) {
+    //     return false;
+    //   }
   }
 };
 const drawChessPieces = (side: Sides) => {
