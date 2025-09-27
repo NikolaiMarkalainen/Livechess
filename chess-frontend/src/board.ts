@@ -5,7 +5,6 @@ const board = document.querySelector<HTMLDivElement>("#board")!;
 const boardValues = ["A", "B", "C", "D", "E", "F", "G", "H"];
 
 const boardSquareToNumber = (square: string | undefined): boardPositions => {
-  console.log(square);
   if (!square) return { row: 0, column: 0 };
   const column = boardValues.indexOf(square[0].toUpperCase()) + 1;
   return {
@@ -39,21 +38,21 @@ const setNewSquare = (targetSquare: HTMLElement, capture: boolean) => {
 
 const clearSelected = () => {
   const movingPiece = document.querySelector<HTMLImageElement>(`img[data-selected="true"]`);
+  console.log(movingPiece);
   delete movingPiece?.dataset.selected;
+  console.log(movingPiece);
 };
 
 const validateMove = (target: HTMLElement, piece: HTMLElement) => {
   const pieceSquare = boardSquareToNumber(piece.dataset.square);
   const targetSquare = boardSquareToNumber(target.dataset.square);
-  console.log(target instanceof HTMLImageElement);
-
   switch (piece.dataset.piece) {
-    case "pawn":
+    case "pawn": {
+      const columnDifference =
+        piece.dataset.side === "white" ? targetSquare.row - pieceSquare.row : pieceSquare.row - targetSquare.row;
       // we are moving on correct column this is allowed
       if (pieceSquare.column === targetSquare.column) {
         // create logic for pawns moving forward on the board with substraction
-        const columnDifference =
-          piece.dataset.side === "white" ? targetSquare.row - pieceSquare.row : pieceSquare.row - targetSquare.row;
 
         const startingRow = piece.dataset.side === "white" ? 2 : 7;
         // when walking forward with a pawn we always need to check whether there is collision
@@ -70,7 +69,10 @@ const validateMove = (target: HTMLElement, piece: HTMLElement) => {
         return false;
       }
       // capture event
-      if (pieceSquare.column - 1 === targetSquare.column || pieceSquare.column + 1 === targetSquare.column) {
+      if (
+        (pieceSquare.column - 1 === targetSquare.column && columnDifference === 1) ||
+        (pieceSquare.column + 1 === targetSquare.column && columnDifference === 1)
+      ) {
         if (
           target instanceof HTMLImageElement &&
           // avoid taking own pieces lol
@@ -80,16 +82,40 @@ const validateMove = (target: HTMLElement, piece: HTMLElement) => {
           return true;
         }
       }
-    // case "knight":
-    //   //knight can move in L shape so +2 in one axis and 1 on the other
-    //   if (pieceSquare.column) {
-    //     return false;
-    //   }
+      return false;
+    }
+    case "knight": {
+      //knight can move in L shape so +2 in one axis and 1 on the other
+      const columnMove = Math.abs(pieceSquare.column - targetSquare.column);
+      const rowMove = Math.abs(pieceSquare.row - targetSquare.row);
+      if ((columnMove === 2 && rowMove === 1) || (columnMove === 1 && rowMove === 2)) {
+        //capture event
+        if (target instanceof HTMLImageElement) {
+          if (target.dataset.side !== piece.dataset.side) {
+            setNewSquare(target, true);
+            return true;
+          }
+        } else {
+          setNewSquare(target, false);
+          return false;
+        }
+        return false;
+      }
+      return false;
+    }
+    case "bishop": {
+      const columnMove = Math.abs(pieceSquare.column - targetSquare.column);
+      const rowMove = Math.abs(pieceSquare.row - targetSquare.row);
+      if (columnMove >= 1 && rowMove >= 1 && rowMove === columnMove) {
+        setNewSquare(target, false);
+        return true;
+      }
+    }
   }
 };
 const drawChessPieces = (side: Sides) => {
   const knightSquares = side === "white" ? ["B1", "G1"] : ["B8", "G8"];
-  const bishopSquares = side === "white" ? ["C1", "F1"] : ["C8", "F8"];
+  const bishopSquares = side === "white" ? ["C1", "F1"] : ["D4", "F8"];
   const rookSquares = side === "white" ? ["A1", "H1"] : ["A8", "H8"];
   const queenSquare = side === "white" ? ["D1"] : ["D8"];
   const kingSquare = side === "white" ? ["E1"] : ["E8"];
@@ -173,6 +199,7 @@ const movePiece = () => {
   board.addEventListener("click", (e) => {
     //general square on our grid can be div or img of a piece
     let square = e.target as HTMLElement | null;
+    console.log(square);
     if (!square) return;
 
     if (!selectedSquare) {
@@ -185,13 +212,14 @@ const movePiece = () => {
       } // instance of when selected square actually exists so here we need to validate our move
     } else {
       // we have to validate where we are going from which square
-      console.log(square, selectedSquare);
       const isValidMove = validateMove(square, selectedSquare);
       if (isValidMove) {
+        delete selectedSquare.dataset.selected;
         selectedSquare = null;
         return;
       } else {
         // refresh selectedsquare so we dont get stuck on one piece and unable to move
+        delete selectedSquare.dataset.selected;
         selectedSquare = null;
         return;
       }
