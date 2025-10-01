@@ -13,6 +13,9 @@ const boardSquareToNumber = (square: string | undefined): boardPositions => {
   };
 };
 
+const boardNumberToLetter = (column: number): string => {
+  return boardValues[column - 1];
+};
 const setNewSquare = (targetSquare: HTMLElement, capture: boolean) => {
   // fetch the selected piece
   const movingPiece = document.querySelector<HTMLImageElement>(`img[data-selected="true"]`);
@@ -40,10 +43,49 @@ const clearSelected = () => {
   delete movingPiece?.dataset.selected;
 };
 
-const collidesWithPieces = (target: HTMLElement, piece: HTMLElement) => {
+const setNewMove = (target: HTMLElement, side: Sides) => {
+  if (target instanceof HTMLImageElement) {
+    // capture event
+    if (target.dataset.side !== side) {
+      setNewSquare(target, true);
+      return true;
+    }
+  } else {
+    setNewSquare(target, false);
+    return true;
+  }
+};
+
+const collidesWithPieces = (targetSquare: boardPositions, pieceSquare: boardPositions, piece: Pieces) => {
   // check from pos 1 to pos 2 for different pieces so for example we need rook bishop and queen
 
-  if (piece.dataset.piece === "bishop") {
+  if (piece === "bishop") {
+    const rowDiff = targetSquare.row - pieceSquare.row;
+    const columnDiff = targetSquare.column - pieceSquare.column;
+
+    let rowMove = rowDiff > 0 ? 1 : -1;
+    let colMove = columnDiff > 0 ? 1 : -1;
+
+    let currentRow = pieceSquare.row;
+    let currentCol = pieceSquare.column;
+
+    while (currentRow != targetSquare.row && currentCol != targetSquare.column) {
+      currentRow += rowMove;
+      currentCol += colMove;
+      if (currentRow === targetSquare.row && currentCol === targetSquare.column) {
+        break;
+      }
+
+      const columnLetter = boardNumberToLetter(currentCol);
+      const square = document.querySelector<HTMLDivElement>(`div[data-square=${columnLetter}${currentRow}]`);
+
+      // if i check here if it has child nodes we need to somehow verify its okay to capture it ?
+      if (square?.hasChildNodes()) {
+        return true;
+      }
+    }
+    return false;
+
     // eval destination to current position
     // the grid is 8 by 8 so we check where it can realistically move
     // set flag to blocker if path is blocked
@@ -51,7 +93,7 @@ const collidesWithPieces = (target: HTMLElement, piece: HTMLElement) => {
   }
 };
 
-const validateMove = (target: HTMLElement, piece: HTMLElement) => {
+const isValidMove = (target: HTMLElement, piece: HTMLElement) => {
   const pieceSquare = boardSquareToNumber(piece.dataset.square);
   const targetSquare = boardSquareToNumber(target.dataset.square);
   switch (piece.dataset.piece) {
@@ -81,14 +123,7 @@ const validateMove = (target: HTMLElement, piece: HTMLElement) => {
         (pieceSquare.column - 1 === targetSquare.column && columnDifference === 1) ||
         (pieceSquare.column + 1 === targetSquare.column && columnDifference === 1)
       ) {
-        if (
-          target instanceof HTMLImageElement &&
-          // avoid taking own pieces lol
-          target.dataset.side !== piece.dataset.side
-        ) {
-          setNewSquare(target, true);
-          return true;
-        }
+        setNewMove(target, piece.dataset.side as Sides);
       }
       return false;
     }
@@ -97,17 +132,7 @@ const validateMove = (target: HTMLElement, piece: HTMLElement) => {
       const columnMove = Math.abs(pieceSquare.column - targetSquare.column);
       const rowMove = Math.abs(pieceSquare.row - targetSquare.row);
       if ((columnMove === 2 && rowMove === 1) || (columnMove === 1 && rowMove === 2)) {
-        //capture event
-        if (target instanceof HTMLImageElement) {
-          if (target.dataset.side !== piece.dataset.side) {
-            setNewSquare(target, true);
-            return true;
-          }
-        } else {
-          setNewSquare(target, false);
-          return false;
-        }
-        return false;
+        setNewMove(target, piece.dataset.side as Sides);
       }
       return false;
     }
@@ -115,8 +140,12 @@ const validateMove = (target: HTMLElement, piece: HTMLElement) => {
       const columnMove = Math.abs(pieceSquare.column - targetSquare.column);
       const rowMove = Math.abs(pieceSquare.row - targetSquare.row);
       if (columnMove >= 1 && rowMove >= 1 && rowMove === columnMove) {
-        setNewSquare(target, false);
-        return true;
+        const isColliding = collidesWithPieces(targetSquare, pieceSquare, piece.dataset.piece);
+        if (isColliding) {
+          return false;
+        } else {
+          setNewMove(target, piece.dataset.side as Sides);
+        }
       }
     }
   }
@@ -219,8 +248,8 @@ const movePiece = () => {
       } // instance of when selected square actually exists so here we need to validate our move
     } else {
       // we have to validate where we are going from which square
-      const isValidMove = validateMove(square, selectedSquare);
-      if (isValidMove) {
+      const isValidMovement = isValidMove(square, selectedSquare);
+      if (isValidMovement) {
         delete selectedSquare.dataset.selected;
         selectedSquare = null;
         return;
