@@ -1,282 +1,18 @@
 import "./style.css";
-import type { boardPositions, Pieces, Sides } from "./types";
-
+import type { Sides } from "./types";
+import { drawChessBoard, drawChessPieces } from "./draw";
+import { isValidMove } from "./movement";
 const board = document.querySelector<HTMLDivElement>("#board")!;
-const boardValues = ["A", "B", "C", "D", "E", "F", "G", "H"];
 
-const boardSquareToNumber = (square: string | undefined): boardPositions => {
-  if (!square) return { row: 0, column: 0 };
-  const column = boardValues.indexOf(square[0].toUpperCase()) + 1;
-  return {
-    column: column,
-    row: Number(square[1]),
-  };
-};
 
-const boardNumberToLetter = (column: number): string => {
-  return boardValues[column - 1];
-};
 
-const assignMove = (target: HTMLElement, side: Sides) => {
-  const setNewSquare = (targetSquare: HTMLElement, capture: boolean): boolean => {
-    // fetch the selected piece
-    const movingPiece = document.querySelector<HTMLImageElement>(`img[data-selected="true"]`);
-    if (!movingPiece) return false;
+const turnSwitch = (side: Sides) => {
+  console.log(side)
+}
 
-    if (capture) {
-      if (targetSquare instanceof HTMLImageElement) {
-        const cellDiv = document.querySelector<HTMLDivElement>(`div[data-square=${targetSquare.dataset.square}]`);
-        if (!cellDiv) return false;
-        cellDiv.replaceChild(movingPiece, targetSquare);
-        movingPiece.dataset.square = targetSquare.dataset.square;
-        clearSelected();
-        return true;
-      }
-    }
-    // update the piece position with new one to monitor whats happening
-    // the piece is no longer moving we need to remove the selected flag from it
-    movingPiece.dataset.square = targetSquare.dataset.square;
-    clearSelected();
-    targetSquare.appendChild(movingPiece);
-    return true;
-  };
+const gameStart = () => {
 
-  const clearSelected = () => {
-    const movingPiece = document.querySelector<HTMLImageElement>(`img[data-selected="true"]`);
-    delete movingPiece?.dataset.selected;
-  };
-
-  if (target instanceof HTMLImageElement) {
-    // capture event
-    if (target.dataset.side !== side) {
-      return setNewSquare(target, true);
-    }
-  } else {
-    return setNewSquare(target, false);
-  }
-};
-
-const collidesWithPieces = (targetSquare: boardPositions, pieceSquare: boardPositions) => {
-  // check from pos 1 to pos 2 for different pieces so for example we need rook bishop and queen
-  const rowDiff = targetSquare.row - pieceSquare.row;
-  const columnDiff = targetSquare.column - pieceSquare.column;
-
-  let currentRow = pieceSquare.row;
-  let currentCol = pieceSquare.column;
-
-  const isPathBlocked = (targetSquare: boardPositions, rowMove: number, colMove: number) => {
-    while (currentRow !== targetSquare.row || currentCol !== targetSquare.column) {
-      currentRow += rowMove;
-      currentCol += colMove;
-      // exit early and validate last square during assignMove function
-      if (currentRow === targetSquare.row && currentCol === targetSquare.column) {
-        break;
-      }
-      const columnLetter = boardNumberToLetter(currentCol);
-      const square = document.querySelector<HTMLDivElement>(`div[data-square=${columnLetter}${currentRow}]`);
-
-      // check if it has nested image
-      if (square?.hasChildNodes()) {
-        return true;
-      }
-    }
-    return false;
-  };
-
-  // diag queen / bishop
-  if (Math.abs(rowDiff) === Math.abs(columnDiff)) {
-    const rowMove = rowDiff > 0 ? 1 : -1;
-    const colMove = columnDiff > 0 ? 1 : -1;
-    return isPathBlocked(targetSquare, rowMove, colMove);
-    // rook / queen mov
-  } else if (rowDiff === 0 || columnDiff === 0) {
-    const rowMove = rowDiff === 0 ? 0 : rowDiff > 0 ? 1 : -1;
-    const colMove = columnDiff === 0 ? 0 : columnDiff > 0 ? 1 : -1;
-    return isPathBlocked(targetSquare, rowMove, colMove);
-  }
-};
-
-const isValidMove = (target: HTMLElement, piece: HTMLElement) => {
-  const pieceSquare = boardSquareToNumber(piece.dataset.square);
-  const targetSquare = boardSquareToNumber(target.dataset.square);
-  console.log(target);
-  switch (piece.dataset.piece) {
-    case "pawn": {
-      const columnDifference =
-        piece.dataset.side === "white" ? targetSquare.row - pieceSquare.row : pieceSquare.row - targetSquare.row;
-      // we are moving on correct column this is allowed
-      if (pieceSquare.column === targetSquare.column) {
-        const startingRow = piece.dataset.side === "white" ? 2 : 7;
-        // when walking forward with a pawn we always need to check whether there is collision
-        // allow starterOpening to move 2 rows at once
-        if (columnDifference === 1 || (columnDifference === 2 && pieceSquare.row === startingRow)) {
-          // dont allow capturin from front
-          if (target instanceof HTMLImageElement) {
-            return false;
-          }
-          assignMove(target, piece.dataset.side as Sides);
-          return true;
-        }
-        return false;
-      }
-      // capture event check if we move onto image here and not blank div
-      if (target instanceof HTMLImageElement) {
-        if (
-          (pieceSquare.column - 1 === targetSquare.column && columnDifference === 1) ||
-          (pieceSquare.column + 1 === targetSquare.column && columnDifference === 1)
-        ) {
-          return assignMove(target, piece.dataset.side as Sides);
-        }
-        return false;
-      }
-      return false;
-    }
-    case "knight": {
-      //knight can move in L shape so +2 in one axis and 1 on the other
-      const columnMove = Math.abs(pieceSquare.column - targetSquare.column);
-      const rowMove = Math.abs(pieceSquare.row - targetSquare.row);
-      if ((columnMove === 2 && rowMove === 1) || (columnMove === 1 && rowMove === 2)) {
-        return assignMove(target, piece.dataset.side as Sides);
-      }
-      return false;
-    }
-    case "bishop": {
-      const columnMove = Math.abs(pieceSquare.column - targetSquare.column);
-      const rowMove = Math.abs(pieceSquare.row - targetSquare.row);
-      if (columnMove >= 1 && rowMove >= 1 && rowMove === columnMove) {
-        const isColliding = collidesWithPieces(targetSquare, pieceSquare);
-        if (isColliding) {
-          return false;
-        } else {
-          return assignMove(target, piece.dataset.side as Sides);
-        }
-      }
-      return false;
-    }
-    case "rook": {
-      //rook either moves columns or rows
-      const columnMove = Math.abs(pieceSquare.column - targetSquare.column);
-      const rowMove = Math.abs(pieceSquare.row - targetSquare.row);
-      if ((columnMove >= 1 && rowMove === 0) || (rowMove >= 1 && columnMove === 0)) {
-        const isColliding = collidesWithPieces(targetSquare, pieceSquare);
-        if (isColliding) {
-          return false;
-        } else {
-          return assignMove(target, piece.dataset.side as Sides);
-        }
-      }
-      return false;
-    }
-    case "queen": {
-      const columnMove = Math.abs(pieceSquare.column - targetSquare.column);
-      const rowMove = Math.abs(pieceSquare.row - targetSquare.row);
-      // checks for bishop or roo ktype mvoes
-      if (
-        (columnMove >= 1 && rowMove >= 1 && rowMove === columnMove) ||
-        (columnMove >= 1 && rowMove === 0) ||
-        (rowMove >= 1 && columnMove === 0)
-      ) {
-        const isColliding = collidesWithPieces(targetSquare, pieceSquare);
-        if (isColliding) {
-          return false;
-        } else {
-          assignMove(target, piece.dataset.side as Sides);
-          return true;
-        }
-      }
-      return false;
-    }
-    case "king": {
-      const columnMove = Math.abs(pieceSquare.column - targetSquare.column);
-      const rowMove = Math.abs(pieceSquare.row - targetSquare.row);
-      if (columnMove === 1 || rowMove === 1) {
-        console.log(rowMove, columnMove);
-        assignMove(target, piece.dataset.side as Sides);
-        return true;
-      }
-      return false;
-    }
-  }
-};
-const drawChessPieces = (side: Sides) => {
-  const knightSquares = side === "white" ? ["B1", "G1"] : ["B8", "G8"];
-  const bishopSquares = side === "white" ? ["C1", "F1"] : ["C8", "F8"];
-  const rookSquares = side === "white" ? ["A1", "H1"] : ["A8", "H8"];
-  const queenSquare = side === "white" ? ["D1"] : ["D8"];
-  const kingSquare = side === "white" ? ["D4"] : ["E8"];
-  const pawnRow = side === "white" ? "2" : "7";
-
-  const setPieceDataSet = (side: Sides, piece: Pieces, square: string): HTMLImageElement => {
-    const element = document.createElement("img");
-    element.alt = `${piece}-${side}`;
-    element.src = `/pieces/${piece}-${side}.png`;
-    element.dataset.piece = piece;
-    element.dataset.side = side;
-    element.dataset.square = square;
-    return element;
-  };
-
-  // pawns rendered
-  for (let i = 0; i < 8; i++) {
-    let square = document.querySelector(`[data-square="${boardValues[i]}${pawnRow}"]`)!;
-    const pawn = setPieceDataSet(side, "pawn", `${boardValues[i]}${pawnRow}`);
-    square.appendChild(pawn);
-  }
-  // render knight conditionally
-  knightSquares.forEach((k) => {
-    const knight = setPieceDataSet(side, "knight", k);
-    document.querySelector(`[data-square="${k}"]`)?.appendChild(knight);
-  });
-  // render rook conditionally
-  rookSquares.forEach((r) => {
-    const rook = setPieceDataSet(side, "rook", r);
-    document.querySelector(`[data-square="${r}"]`)?.appendChild(rook);
-  });
-  // render bishop conditionally
-  bishopSquares.forEach((b) => {
-    const bishop = setPieceDataSet(side, "bishop", b);
-    document.querySelector(`[data-square="${b}"]`)?.appendChild(bishop);
-  });
-  // render queen conditionally
-  queenSquare.forEach((q) => {
-    const queen = setPieceDataSet(side, "queen", q);
-    document.querySelector(`[data-square="${q}"]`)?.appendChild(queen);
-  });
-  // render king conditionally
-  kingSquare.forEach((k) => {
-    const king = setPieceDataSet(side, "king", k);
-    document.querySelector(`[data-square="${k}"]`)?.appendChild(king);
-  });
-};
-
-const drawChessBoard = () => {
-  const boardGrid = document.querySelector<HTMLDivElement>(".board-grid")!;
-  const boardText = document.querySelector<HTMLDivElement>(".board-text")!;
-  const boardNumbers = document.querySelector<HTMLDivElement>(".board-numbers")!;
-
-  const boardValues = ["A", "B", "C", "D", "E", "F", "G", "H"];
-  boardValues.forEach((value) => {
-    const textBox = document.createElement("p");
-    textBox.textContent = value;
-    boardText.appendChild(textBox);
-  });
-
-  for (let row = 0; row < 8; row++) {
-    const numberBox = document.createElement("p");
-    numberBox.textContent = (8 - row).toString();
-    for (let col = 0; col < 8; col++) {
-      const square = document.createElement("div");
-      square.dataset.square = `${boardValues[col]}${8 - row}`;
-      if ((row + col) % 2 === 0) {
-        square.className = "board-primary";
-      } else {
-        square.className = "board-secondary";
-      }
-      boardGrid.appendChild(square);
-    }
-    boardNumbers.appendChild(numberBox);
-  }
-};
+}
 
 const movePiece = () => {
   const board = document.querySelector<HTMLDivElement>(".board-grid")!;
@@ -293,14 +29,16 @@ const movePiece = () => {
       if (square instanceof HTMLImageElement) {
         selectedSquare = square;
         selectedSquare.dataset.selected = "true";
+        
       } // instance of when selected square actually exists so here we need to validate our move
     } else {
       // we have to validate where we are going from which square
       const isValidMovement = isValidMove(square, selectedSquare);
       if (isValidMovement) {
+        const side = selectedSquare.dataset.side;
         delete selectedSquare.dataset.selected;
         selectedSquare = null;
-        return;
+        turnSwitch(side as Sides)
       } else {
         // refresh selectedsquare so we dont get stuck on one piece and unable to move
         delete selectedSquare.dataset.selected;
@@ -313,14 +51,41 @@ const movePiece = () => {
 };
 
 board.innerHTML = `
-  <div class="board-wrapper">
-    <div class="board-numbers"></div>
-    <div class="board-grid"></div>
+  <div class="view board block">
+    <div class="board-container">
+      <div class="board-numbers"></div>
+      <div class="board-grid"></div>
+    </div>
+    <div class="board-text"></div>
   </div>
-  <div class="board-text"></div>
+  <div class="board-start">
+    <h1>Choose a side</h1>
+    <button id="black-btn" class="blackbtn">
+      <h1>Black</h1>
+    </button>
+    <button id="white-btn" class="whitebtn">
+      <h1>White</h1>
+    </button>
+  </div>
 `;
 
 drawChessBoard();
 drawChessPieces("white");
 drawChessPieces("black");
 movePiece();
+
+// const boardWrapper = document.querySelector<HTMLDivElement>('.board-wrapper')!;
+// const boardText = document.querySelector<HTMLDivElement>('.board-text')!;
+// const boardStart = document.querySelector<HTMLDivElement>('.board-start')!;
+
+// document.getElementById("white-btn")!.addEventListener("click", () => {
+//   boardStart.remove()
+//       const boardWrapper = document.querySelector<HTMLDivElement>('.board-wrapper')!;
+//     const boardText = document.querySelector<HTMLDivElement>('.board-text')!;
+
+//     boardWrapper.style.display = "block";
+//     boardText.style.display = "block";
+// })
+// document.getElementById("black-btn")!.addEventListener("click", () => {
+//   console.log("paskaa black",)
+// })
