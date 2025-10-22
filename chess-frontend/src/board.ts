@@ -2,46 +2,17 @@ import "./style.css";
 import type { Sides } from "./types";
 import { drawChessBoard, drawChessPieces } from "./draw";
 import { isValidMove } from "./movement";
+import { moves } from "./movement";
+import { formatTime, countDown } from "./timer";
+
 const board = document.querySelector<HTMLDivElement>("#board")!;
-// need dropdown for gmae times
-
-let timer;
-let timerInterval: number | undefined;
-
-const formatTime = (totalSeconds: number): string =>  {
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = Math.floor(totalSeconds % 60);
-  const milliseconds = Math.floor((totalSeconds % 1) * 100);
-
-  const mm = String(minutes).padStart(2, '0');
-  const ss = String(seconds).padStart(2, '0');
-  const msms = String(milliseconds).padStart(2, '0');
-
-  return `${mm}:${ss}:${msms}`;
-}
-
-const countDown = (seconds: number) => { 
-  const countdownDiv = document.querySelector('.countdown') as HTMLDivElement;
-  let timeLeft = seconds;
-  if (timerInterval) clearInterval(timerInterval);
-  timerInterval = setInterval(() => {
-  if (timeLeft <= 0) {
-    clearInterval(timerInterval);
-    countdownDiv.textContent = '⏱️ 00:00:00';
-    return;
-  }
-    countdownDiv.textContent = `⏱️ ${formatTime(timeLeft)}`;
-    timeLeft -= 0.01;
-  }, 10);}
-
+let playerTimer;
+let opponentTimer;
 const movePiece = () => {
   const board = document.querySelector<HTMLDivElement>(".board-grid")!;
   let draggable: HTMLImageElement
   //draggable element
   let selectedSquare: HTMLElement | null;
-  board.addEventListener("drag", (e: DragEvent) => {
-    console.log("a?")
-  })
 
   board.addEventListener("dragstart", (e: DragEvent) => {
     const target = e.target as HTMLElement;
@@ -96,7 +67,17 @@ const movePiece = () => {
 
 const dragElement = (startPos: HTMLImageElement, target: HTMLElement) => {
   startPos.dataset.selected = "true";
-  isValidMove(target, startPos)
+  const valid = isValidMove(target, startPos);
+  // stop timer for moved and 
+  if (valid) {
+    console.log(moves)
+    if (moves.length % 2 !== 0) {
+      countDown("black")
+      // playerTimer = formatTime(Number(timerDuration.value))      
+    } else {
+      countDown("white")
+    }
+  }
   delete startPos.dataset.selected;
   startPos.classList.remove("selected")
   return;
@@ -104,12 +85,13 @@ const dragElement = (startPos: HTMLImageElement, target: HTMLElement) => {
 
 board.innerHTML = `
   <div class="board-field">
+    <div id="opponent-timer">⏱️ ${opponentTimer}</div> 
     <div class="board-container">
       <div class="board-numbers"></div>
       <div class="board-grid"></div>
     </div>
     <div class="board-text"></div>
-    <div class="countdown">⏱️ ${timer}</div> 
+    <div id="player-timer">⏱️ ${playerTimer}</div> 
   </div>
   <div class="board-start">
     <h1>Choose a side</h1>
@@ -139,19 +121,35 @@ const startGame = (side: Sides) => {
   if (mainView && gameView) {
     mainView.style.display = 'none'
     gameView.style.display = 'block'
-    drawChessBoard(side === "black" ? true : false);
+    drawChessBoard(side);
     drawChessPieces("white");
     drawChessPieces("black");
-    timer = formatTime(Number(timerDuration.value))
-    countDown(Number(timerDuration.value));
+    playerTimer = formatTime(Number(timerDuration.value))
+    opponentTimer = formatTime(Number(timerDuration.value))
+    const playerDiv = document.querySelector("#player-timer") as HTMLDivElement;
+    playerDiv.textContent = playerTimer;
+    const opponentDiv = document.querySelector("#opponent-timer") as HTMLDivElement;
+    opponentDiv.textContent = opponentTimer
   }
 }
 
 document.getElementById("black-btn")?.addEventListener('click', () => {
   startGame('black')
+  const playerTimer = document.getElementById('player-timer') as HTMLElement
+  const opponentTimer = document.getElementById('opponent-timer') as HTMLElement
+  if (playerTimer && opponentTimer) {
+    playerTimer.dataset.timerside = "black"
+    opponentTimer.dataset.timerside = "white"
+  }
 })
 document.getElementById("white-btn")?.addEventListener('click', () => {
   startGame('white')
+  const playerTimer = document.querySelector('#player-timer') as HTMLElement
+  const opponentTimer = document.querySelector('#opponent-timer') as HTMLElement
+  if (playerTimer && opponentTimer) {
+    playerTimer.dataset.timerside = "white"
+    opponentTimer.dataset.timerside = "black"
+  }
 })
 
 movePiece();

@@ -52,10 +52,12 @@ export const drawChessPieces = (side: Sides) => {
   });
 };
 
-export const drawChessBoard = (reverseBoard: boolean) => {
+export const drawChessBoard = (side: Sides) => {
   const boardGrid = document.querySelector<HTMLDivElement>(".board-grid")!;
   const boardText = document.querySelector<HTMLDivElement>(".board-text")!;
   const boardNumbers = document.querySelector<HTMLDivElement>(".board-numbers")!;
+  // const playerTimer = document.querySelector<HTMLDivElement>(".player-timer")!;
+  // const opponentTimer = document.querySelector<HTMLDivElement>(".opponent-timer")!;
 
   const boardValues = ["A", "B", "C", "D", "E", "F", "G", "H"];
   boardValues.forEach((value) => {
@@ -64,9 +66,9 @@ export const drawChessBoard = (reverseBoard: boolean) => {
     boardText.appendChild(textBox);
   });
 
-  for (let row = reverseBoard ? 7 : 0;
-    reverseBoard ? row >= 0 : row < 8;
-    reverseBoard ? row-- : row++) {
+  for (let row = side === "black" ? 7 : 0;
+     side === "black" ? row >= 0 : row < 8;
+     side === "black" ? row-- : row++) {
     const numberBox = document.createElement("p");
     numberBox.textContent = (8 - row).toString();
     for (let col = 0; col < 8; col++) {

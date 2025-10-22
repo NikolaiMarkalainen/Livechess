@@ -4,7 +4,7 @@ import { boardValues } from "./types";
 
 
 
-const moves: Move[] = []
+export const moves: Move[] = []
 
 
 console.log(moves)
