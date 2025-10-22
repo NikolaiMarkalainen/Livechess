@@ -1,4 +1,4 @@
-import type { Sides, Pieces } from "./types";
+import type { Sides, Pieces, Captures } from "./types";
 import { boardValues } from "./types";
 
 export const drawChessPieces = (side: Sides) => {
@@ -16,6 +16,7 @@ export const drawChessPieces = (side: Sides) => {
     element.dataset.piece = piece;
     element.dataset.side = side;
     element.dataset.square = square;
+    element.className = "chess-piece";
     return element;
   };
 
@@ -66,9 +67,7 @@ export const drawChessBoard = (side: Sides) => {
     boardText.appendChild(textBox);
   });
 
-  for (let row = side === "black" ? 7 : 0;
-     side === "black" ? row >= 0 : row < 8;
-     side === "black" ? row-- : row++) {
+  for (let row = side === "black" ? 7 : 0; side === "black" ? row >= 0 : row < 8; side === "black" ? row-- : row++) {
     const numberBox = document.createElement("p");
     numberBox.textContent = (8 - row).toString();
     for (let col = 0; col < 8; col++) {
@@ -83,4 +82,20 @@ export const drawChessBoard = (side: Sides) => {
     }
     boardNumbers.appendChild(numberBox);
   }
+};
+
+export const drawCaptures = (captures: Captures[]) => {
+  captures.forEach((capture) => {
+    const opponentSide = capture.side === "white" ? "black" : "white";
+    const capturesParent = document.querySelector(`[data-cside=${capture.side}] #pieces`) as HTMLDivElement;
+    console.log(capturesParent);
+    capture.pieces.forEach((piece) => {
+      if (!piece.drawn) {
+        const element = document.createElement("img");
+        element.src = `/pieces/${piece.piece}-${opponentSide}.png`;
+        capturesParent.appendChild(element);
+        piece.drawn = true;
+      }
+    });
+  });
 };

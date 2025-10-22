@@ -1,20 +1,20 @@
 import type { Sides } from "./types";
 
 let timerInterval: number | undefined;
-let blackTimeLeft: number = 0
-let whiteTimeLeft: number = 0
+let blackTimeLeft: number = 0;
+let whiteTimeLeft: number = 0;
 
 export const formatTime = (totalSeconds: number): string => {
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = Math.floor(totalSeconds % 60);
   const milliseconds = Math.floor((totalSeconds % 1) * 100);
 
-  const mm = String(minutes).padStart(2, '0');
-  const ss = String(seconds).padStart(2, '0');
-  const msms = String(milliseconds).padStart(2, '0');
+  const mm = String(minutes).padStart(2, "0");
+  const ss = String(seconds).padStart(2, "0");
+  const msms = String(milliseconds).padStart(2, "0");
 
   return `${mm}:${ss}:${msms}`;
-}
+};
 
 export const parseTime = (timeString: string): number => {
   const [mm, ss, msms] = timeString.split(":").map(Number);
@@ -26,36 +26,34 @@ export const parseTime = (timeString: string): number => {
   return minutes * 60 + seconds + milliseconds / 100;
 };
 
-
-
-export const countDown = (side: Sides) => { 
-  const countdownDiv = document.querySelector(`[data-timerside=${side}]`) as HTMLDivElement;
-  const rawText = countdownDiv.textContent
-  console.log(blackTimeLeft, whiteTimeLeft, countdownDiv.textContent)
+export const countDown = (side: Sides) => {
+  console.log(document.querySelector(`[data-cside=${side}]`));
+  const countdownDiv = document.querySelector(`[data-cside=${side}] #timer`) as HTMLDivElement;
+  console.log(countdownDiv);
+  const rawText = countdownDiv.textContent;
 
   if (blackTimeLeft === 0 || whiteTimeLeft === 0) {
     if (side === "black") {
-      blackTimeLeft = parseTime(rawText)
+      blackTimeLeft = parseTime(rawText);
     } else {
-      whiteTimeLeft = parseTime(rawText)
+      whiteTimeLeft = parseTime(rawText);
     }
   }
-  let seconds = side === "black" ? blackTimeLeft : whiteTimeLeft
+  let seconds = side === "black" ? blackTimeLeft : whiteTimeLeft;
   let timeLeft = seconds;
   if (timerInterval) clearInterval(timerInterval);
   timerInterval = setInterval(() => {
-  if (timeLeft <= 0) {
-    clearInterval(timerInterval);
-    countdownDiv.textContent = '⏱️ 00:00:00';
-    return;
-  }
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      countdownDiv.textContent = "⏱️ 00:00:00";
+      return;
+    }
     countdownDiv.textContent = `⏱️ ${formatTime(timeLeft)}`;
     timeLeft -= 0.01;
     if (side === "black") {
-      blackTimeLeft = timeLeft
+      blackTimeLeft = timeLeft;
     } else {
-      whiteTimeLeft = timeLeft
+      whiteTimeLeft = timeLeft;
     }
   }, 10);
-
-}
+};

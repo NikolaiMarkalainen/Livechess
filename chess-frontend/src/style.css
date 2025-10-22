@@ -32,7 +32,7 @@ body {
   height: 100rem;
 }
 .board-field {
-  display: none
+  display: none;
 }
 .board-grid {
   display: grid;
@@ -47,7 +47,7 @@ body {
 .board-container {
   display: flex;
   flex-direction: row;
-  align-items: stretch; 
+  align-items: stretch;
 }
 .board-secondary {
   background-color: #535bf2;
@@ -58,9 +58,9 @@ body {
 
 .board-text {
   display: grid;
-  grid-template-columns: repeat(8, 5rem); 
+  grid-template-columns: repeat(8, 5rem);
   text-align: center;
-  padding-left: 1.5rem
+  padding-left: 1.5rem;
 }
 
 .board-numbers {
@@ -68,7 +68,7 @@ body {
   padding-right: 1rem;
   flex-direction: column;
   justify-content: space-between;
-  grid-template-rows: repeat(8, 5rem); 
+  grid-template-rows: repeat(8, 5rem);
 }
 
 .board-wrapper {
@@ -79,16 +79,17 @@ body {
   width: 100%;
   height: 100%;
   z-index: 1;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
-
 .board-start {
-  display:flex;
+  display: flex;
   flex-direction: column;
   justify-content: center;
   align-content: center;
   button {
-    margin:2rem;
+    margin: 2rem;
   }
   .blackbtn {
     background-color: #242424;
@@ -97,7 +98,7 @@ body {
     background-color: antiquewhite;
     color: black;
   }
-} 
+}
 .timer-parent {
   display: flex;
   flex-direction: column;
@@ -113,10 +114,36 @@ body {
   }
 }
 
+.board-footer {
+  display: flex;
+  flex-direction: row;
+  margin-left: 2rem;
+}
+.countdown {
+  display: flex;
+  align-self: center;
+}
+.countdown-low {
+  display: flex;
+  align-self: center;
+  padding-top: rem;
+}
+.pieces {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0;
+  flex: 1;
+  img {
+    height: 2rem;
+    width: 2rem;
+  }
+}
+
 .dragging {
-  opacity: 0.5
+  opacity: 0.5;
 }
 
 .block {
-  display: none
+  display: none;
 }
