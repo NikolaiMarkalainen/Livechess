@@ -76,11 +76,6 @@ body {
 }
 
 .chess-piece {
-  width: 100%;
-  height: 100%;
-  z-index: 1;
-  user-select: none;
-  -webkit-user-drag: none;
 }
 
 .board-start {
@@ -146,4 +141,70 @@ body {
 
 .block {
   display: none;
+}
+
+.br {
+  background-image: url("/pieces/rook-black.png");
+}
+
+.bp {
+  background-image: url("/pieces/pawn-black.png");
+}
+
+.bn {
+  background-image: url("/pieces/knight-black.png");
+}
+
+.bq {
+  background-image: url("/pieces/queen-black.png");
+}
+
+.bb {
+  background-image: url("/pieces/bishop-black.png");
+}
+.bk {
+  background-image: url("/pieces/king-black.png");
+}
+.wr {
+  background-image: url("/pieces/rook-white.png");
+}
+
+.wp {
+  background-image: url("/pieces/pawn-white.png");
+}
+
+.wn {
+  background-image: url("/pieces/knight-white.png");
+}
+
+.wq {
+  background-image: url("/pieces/queen-white.png");
+}
+
+.wb {
+  background-image: url("/pieces/bishop-white.png");
+}
+
+.wk {
+  background-image: url("/pieces/king-white.png");
+}
+
+.br,
+.bp,
+.bn,
+.bq,
+.bb,
+.bk,
+.wr,
+.wp,
+.wn,
+.wq,
+.wb,
+.wk {
+  width: 100%;
+  height: 100%;
+
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
 }

@@ -1,79 +1,113 @@
-import type { Sides, Pieces, Captures } from "./types";
-import { boardValues } from "./types";
-
+import type { Sides, Captures, boardPositions } from "./types";
 export const drawChessPieces = (side: Sides) => {
-  const knightSquares = side === "white" ? ["B1", "G1"] : ["B8", "G8"];
-  const bishopSquares = side === "white" ? ["C1", "F1"] : ["C8", "F8"];
-  const rookSquares = side === "white" ? ["A1", "H1"] : ["A8", "H8"];
-  const queenSquare = side === "white" ? ["D1"] : ["D8"];
-  const kingSquare = side === "white" ? ["E1"] : ["E8"];
-  const pawnRow = side === "white" ? "2" : "7";
+  const knightSquares: boardPositions[] =
+    side === "white"
+      ? [
+          { row: 1, column: 2 }, // B1
+          { row: 1, column: 7 }, // G1
+        ]
+      : [
+          { row: 8, column: 2 }, // B8
+          { row: 8, column: 7 }, // G8
+        ];
 
-  const setPieceDataSet = (side: Sides, piece: Pieces, square: string): HTMLImageElement => {
-    const element = document.createElement("img");
-    element.alt = `${piece}-${side}`;
-    element.src = `/pieces/${piece}-${side}.png`;
-    element.dataset.piece = piece;
-    element.dataset.side = side;
-    element.dataset.square = square;
-    element.className = "chess-piece";
-    return element;
-  };
+  const bishopSquares: boardPositions[] =
+    side === "white"
+      ? [
+          { row: 1, column: 3 }, // C1
+          { row: 1, column: 6 }, // F1
+        ]
+      : [
+          { row: 8, column: 3 }, // C8
+          { row: 8, column: 6 }, // F8
+        ];
 
-  // pawns rendered
+  const rookSquares: boardPositions[] =
+    side === "white"
+      ? [
+          { row: 1, column: 1 }, // A1
+          { row: 1, column: 8 }, // H1
+        ]
+      : [
+          { row: 8, column: 1 }, // A8
+          { row: 8, column: 8 }, // H8
+        ];
+
+  const queenSquare: boardPositions[] =
+    side === "white"
+      ? [{ row: 1, column: 4 }] // D1
+      : [{ row: 8, column: 4 }]; // D8
+
+  const kingSquare: boardPositions[] =
+    side === "white"
+      ? [{ row: 1, column: 5 }] // E1
+      : [{ row: 8, column: 5 }]; // E8
+
+  const pawnRow = side === "white" ? 2 : 7;
+
   for (let i = 0; i < 8; i++) {
-    let square = document.querySelector(`[data-square="${boardValues[i]}${pawnRow}"]`)!;
-    const pawn = setPieceDataSet(side, "pawn", `${boardValues[i]}${pawnRow}`);
-    square.appendChild(pawn);
+    const square = document.querySelector(`[data-row="${pawnRow}"][data-column="${i + 1}"]`) as HTMLElement;
+    if (!square) return;
+    square.classList.add(`${side[0]}p`);
+    square.dataset.side = side;
+    square.dataset.piece = "pawn";
   }
-  // render knight conditionally
+
   knightSquares.forEach((k) => {
-    const knight = setPieceDataSet(side, "knight", k);
-    document.querySelector(`[data-square="${k}"]`)?.appendChild(knight);
+    const square = document.querySelector(`[data-row="${k.row}"][data-column="${k.column}"]`) as HTMLElement;
+    if (!square) return;
+    square.classList.add(`${side[0]}n`);
+    square.dataset.side = side;
+    square.dataset.piece = "knight";
   });
-  // render rook conditionally
+
   rookSquares.forEach((r) => {
-    const rook = setPieceDataSet(side, "rook", r);
-    document.querySelector(`[data-square="${r}"]`)?.appendChild(rook);
+    const square = document.querySelector(`[data-row="${r.row}"][data-column="${r.column}"]`) as HTMLElement;
+    if (!square) return;
+    square.classList.add(`${side[0]}r`);
+    square.dataset.side = side;
+    square.dataset.piece = "rook";
   });
-  // render bishop conditionally
+
   bishopSquares.forEach((b) => {
-    const bishop = setPieceDataSet(side, "bishop", b);
-    document.querySelector(`[data-square="${b}"]`)?.appendChild(bishop);
+    const square = document.querySelector(`[data-row="${b.row}"][data-column="${b.column}"]`) as HTMLElement;
+    if (!square) return;
+    square.classList.add(`${side[0]}b`);
+    square.dataset.side = side;
+    square.dataset.piece = "bishop";
   });
-  // render queen conditionally
+
   queenSquare.forEach((q) => {
-    const queen = setPieceDataSet(side, "queen", q);
-    document.querySelector(`[data-square="${q}"]`)?.appendChild(queen);
+    const square = document.querySelector(`[data-row="${q.row}"][data-column="${q.column}"]`) as HTMLElement;
+    if (!square) return;
+    square.classList.add(`${side[0]}q`);
+    square.dataset.side = side;
+    square.dataset.piece = "queen";
   });
-  // render king conditionally
+
   kingSquare.forEach((k) => {
-    const king = setPieceDataSet(side, "king", k);
-    document.querySelector(`[data-square="${k}"]`)?.appendChild(king);
+    const square = document.querySelector(`[data-row="${k.row}"][data-column="${k.column}"]`) as HTMLElement;
+    if (!square) return;
+    square.classList.add(`${side[0]}k`);
+    square.dataset.side = side;
+    square.dataset.piece = "king";
   });
 };
 
 export const drawChessBoard = (side: Sides) => {
   const boardGrid = document.querySelector<HTMLDivElement>(".board-grid")!;
-  const boardText = document.querySelector<HTMLDivElement>(".board-text")!;
   const boardNumbers = document.querySelector<HTMLDivElement>(".board-numbers")!;
   // const playerTimer = document.querySelector<HTMLDivElement>(".player-timer")!;
   // const opponentTimer = document.querySelector<HTMLDivElement>(".opponent-timer")!;
 
-  const boardValues = ["A", "B", "C", "D", "E", "F", "G", "H"];
-  boardValues.forEach((value) => {
-    const textBox = document.createElement("p");
-    textBox.textContent = value;
-    boardText.appendChild(textBox);
-  });
-
   for (let row = side === "black" ? 7 : 0; side === "black" ? row >= 0 : row < 8; side === "black" ? row-- : row++) {
     const numberBox = document.createElement("p");
     numberBox.textContent = (8 - row).toString();
-    for (let col = 0; col < 8; col++) {
+    for (let column = 0; column < 8; column++) {
       const square = document.createElement("div");
-      square.dataset.square = `${boardValues[col]}${8 - row}`;
-      if ((row + col) % 2 === 0) {
+      square.dataset.row = `${8 - row}`;
+      square.dataset.column = `${1 + column}`;
+      if ((row + column) % 2 === 0) {
         square.className = "board-primary";
       } else {
         square.className = "board-secondary";

@@ -1,23 +1,23 @@
 import "./style.css";
 import type { Sides } from "./types";
 import { drawChessBoard, drawChessPieces } from "./draw";
-import { isValidMove, movePieceAction } from "./movement";
-import { moves } from "./movement";
-import { formatTime, countDown } from "./timer";
+import { movePieceAction } from "./movement";
+import { formatTime } from "./timer";
 
 const board = document.querySelector<HTMLDivElement>("#board")!;
 let playerTimer;
 let opponentTimer;
 const movePiece = () => {
   const board = document.querySelector<HTMLDivElement>(".board-grid")!;
-  let draggable: HTMLImageElement;
+  let draggable: HTMLDivElement;
   //draggable element
   let selectedSquare: HTMLElement | null;
 
   board.addEventListener("dragstart", (e: DragEvent) => {
     const target = e.target as HTMLElement;
     if (!target) return;
-    if (target instanceof HTMLImageElement) {
+
+    if (target instanceof HTMLDivElement) {
       draggable = target;
       target.classList.add("dragging");
     }
@@ -49,12 +49,13 @@ const movePiece = () => {
       // we need to make sure that we are always grabbing an image element so a piece
       // this is the first grab of the player it always has to be a piece then we populate
       // selected square
-      if (square instanceof HTMLImageElement) {
+      if (square instanceof HTMLDivElement) {
         selectedSquare = square;
         selectedSquare.dataset.selected = "true";
       } // instance of when selected square actually exists so here we need to validate our move
     } else {
       // we have to validate where we are going from which square
+      console.log(square, selectedSquare);
       movePieceAction(square, selectedSquare);
       delete selectedSquare.dataset.selected;
       selectedSquare = null;
@@ -63,7 +64,7 @@ const movePiece = () => {
   });
 };
 
-const dragElement = (startPos: HTMLImageElement, target: HTMLElement) => {
+const dragElement = (startPos: HTMLDivElement, target: HTMLElement) => {
   startPos.dataset.selected = "true";
   movePieceAction(target, startPos);
   delete startPos.dataset.selected;
@@ -127,23 +128,23 @@ const startGame = (side: Sides) => {
   }
 };
 
-document.getElementById("black-btn")?.addEventListener("click", () => {
-  startGame("black");
-  const playerDiv = document.getElementById("player-div") as HTMLElement;
-  const opponentDiv = document.getElementById("opponent-div") as HTMLElement;
-  if (playerDiv && opponentDiv) {
-    playerDiv.dataset.cside = "black";
-    opponentDiv.dataset.cside = "white";
-  }
-});
-document.getElementById("white-btn")?.addEventListener("click", () => {
-  startGame("white");
-  const playerDiv = document.getElementById("player-div") as HTMLElement;
-  const opponentDiv = document.getElementById("opponent-div") as HTMLElement;
-  if (playerDiv && opponentDiv) {
-    playerDiv.dataset.cside = "white";
-    opponentDiv.dataset.cside = "black";
-  }
-});
-
+// document.getElementById("black-btn")?.addEventListener("click", () => {
+//   startGame("black");
+//   const playerDiv = document.getElementById("player-div") as HTMLElement;
+//   const opponentDiv = document.getElementById("opponent-div") as HTMLElement;
+//   if (playerDiv && opponentDiv) {
+//     playerDiv.dataset.cside = "black";
+//     opponentDiv.dataset.cside = "white";
+//   }
+// });
+// document.getElementById("white-btn")?.addEventListener("click", () => {
+//   startGame("white");
+//   const playerDiv = document.getElementById("player-div") as HTMLElement;
+//   const opponentDiv = document.getElementById("opponent-div") as HTMLElement;
+//   if (playerDiv && opponentDiv) {
+//     playerDiv.dataset.cside = "white";
+//     opponentDiv.dataset.cside = "black";
+//   }
+// });
+startGame("white");
 movePiece();
