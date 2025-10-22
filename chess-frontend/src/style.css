@@ -31,6 +31,9 @@ body {
   align-items: center;
   height: 100rem;
 }
+.board-field {
+  display: none
+}
 .board-grid {
   display: grid;
   grid-template-rows: repeat(8, 1fr);
@@ -91,9 +94,24 @@ body {
     background-color: #242424;
   }
   .whitebtn {
-    background-color: aqua;
+    background-color: antiquewhite;
+    color: black;
   }
 } 
+.timer-parent {
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  label {
+    font-size: 1.5rem;
+  }
+  select {
+    min-height: 2.5rem;
+  }
+  option {
+    text-align-last: right;
+  }
+}
 
 
 .block {

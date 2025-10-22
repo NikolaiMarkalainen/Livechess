@@ -52,7 +52,7 @@ export const drawChessPieces = (side: Sides) => {
   });
 };
 
-export const drawChessBoard = () => {
+export const drawChessBoard = (reverseBoard: boolean) => {
   const boardGrid = document.querySelector<HTMLDivElement>(".board-grid")!;
   const boardText = document.querySelector<HTMLDivElement>(".board-text")!;
   const boardNumbers = document.querySelector<HTMLDivElement>(".board-numbers")!;
@@ -64,7 +64,9 @@ export const drawChessBoard = () => {
     boardText.appendChild(textBox);
   });
 
-  for (let row = 0; row < 8; row++) {
+  for (let row = reverseBoard ? 7 : 0;
+    reverseBoard ? row >= 0 : row < 8;
+    reverseBoard ? row-- : row++) {
     const numberBox = document.createElement("p");
     numberBox.textContent = (8 - row).toString();
     for (let col = 0; col < 8; col++) {

@@ -10,9 +10,36 @@ const turnSwitch = (side: Sides) => {
   console.log(side)
 }
 
-const gameStart = () => {
+// need dropdown for gmae times
 
+let timer;
+let timerInterval: number | undefined;
+
+const formatTime = (totalSeconds: number): string =>  {
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = Math.floor(totalSeconds % 60);
+  const milliseconds = Math.floor((totalSeconds % 1) * 100);
+
+  const mm = String(minutes).padStart(2, '0');
+  const ss = String(seconds).padStart(2, '0');
+  const msms = String(milliseconds).padStart(2, '0');
+
+  return `${mm}:${ss}:${msms}`;
 }
+
+const countDown = (seconds: number) => { 
+  const countdownDiv = document.querySelector('.countdown') as HTMLDivElement;
+  let timeLeft = seconds;
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+  if (timeLeft <= 0) {
+    clearInterval(timerInterval);
+    countdownDiv.textContent = '⏱️ 00:00:00';
+    return;
+  }
+    countdownDiv.textContent = `⏱️ ${formatTime(timeLeft)}`;
+    timeLeft -= 0.01;
+  }, 10);}
 
 const movePiece = () => {
   const board = document.querySelector<HTMLDivElement>(".board-grid")!;
@@ -51,12 +78,13 @@ const movePiece = () => {
 };
 
 board.innerHTML = `
-  <div class="view board block">
+  <div class="board-field">
     <div class="board-container">
       <div class="board-numbers"></div>
       <div class="board-grid"></div>
     </div>
     <div class="board-text"></div>
+    <div class="countdown">⏱️ ${timer}</div> 
   </div>
   <div class="board-start">
     <h1>Choose a side</h1>
@@ -66,26 +94,39 @@ board.innerHTML = `
     <button id="white-btn" class="whitebtn">
       <h1>White</h1>
     </button>
+    <div class="timer-parent">
+    <label for="time">Select a time</label>
+    <select name="time" id="time-select">
+      <option value="60">1 Minute</option>
+      <option value="180">3 Minutes</option>
+      <option value="300">5 Minutes</option>
+      <option value="600">10 Minutes</option>
+      <option value="1800">30 Minutes</option>
+    </select>
+    </div>
   </div>
 `;
 
-drawChessBoard();
-drawChessPieces("white");
-drawChessPieces("black");
+const startGame = (side: Sides) => {
+  const mainView = document.querySelector('.board-start') as HTMLElement
+  const gameView = document.querySelector('.board-field') as HTMLElement
+  const timerDuration = document.getElementById('time-select') as HTMLSelectElement
+  if (mainView && gameView) {
+    mainView.style.display = 'none'
+    gameView.style.display = 'block'
+    drawChessBoard(side === "black" ? true : false);
+    drawChessPieces("white");
+    drawChessPieces("black");
+    timer = formatTime(Number(timerDuration.value))
+    countDown(Number(timerDuration.value));
+  }
+}
+
+document.getElementById("black-btn")?.addEventListener('click', () => {
+  startGame('black')
+})
+document.getElementById("white-btn")?.addEventListener('click', () => {
+  startGame('white')
+})
+
 movePiece();
-
-// const boardWrapper = document.querySelector<HTMLDivElement>('.board-wrapper')!;
-// const boardText = document.querySelector<HTMLDivElement>('.board-text')!;
-// const boardStart = document.querySelector<HTMLDivElement>('.board-start')!;
-
-// document.getElementById("white-btn")!.addEventListener("click", () => {
-//   boardStart.remove()
-//       const boardWrapper = document.querySelector<HTMLDivElement>('.board-wrapper')!;
-//     const boardText = document.querySelector<HTMLDivElement>('.board-text')!;
-
-//     boardWrapper.style.display = "block";
-//     boardText.style.display = "block";
-// })
-// document.getElementById("black-btn")!.addEventListener("click", () => {
-//   console.log("paskaa black",)
-// })
