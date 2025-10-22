@@ -1,4 +1,5 @@
 import { drawCaptures } from "./draw";
+import { countDown } from "./timer";
 import type { Sides, boardPositions, Move, Pieces, Captures } from "./types";
 import { boardValues } from "./types";
 
@@ -27,7 +28,7 @@ const boardNumberToLetter = (column: number): string => {
   return boardValues[column - 1];
 };
 
-export const assignMove = (target: HTMLElement, side: Sides) => {
+export const assignMove = (target: HTMLElement, side: Sides): boolean => {
   let move: Move = {
     from: "A1",
     to: "A2",
@@ -83,10 +84,12 @@ export const assignMove = (target: HTMLElement, side: Sides) => {
   } else {
     return setNewSquare(target, false);
   }
+  return false;
 };
 
 export const collidesWithPieces = (targetSquare: boardPositions, pieceSquare: boardPositions) => {
   // check from pos 1 to pos 2 for different pieces so for example we need rook bishop and queen
+  console.log("?");
   const rowDiff = targetSquare.row - pieceSquare.row;
   const columnDiff = targetSquare.column - pieceSquare.column;
 
@@ -125,20 +128,62 @@ export const collidesWithPieces = (targetSquare: boardPositions, pieceSquare: bo
   }
 };
 
-export const isValidMove = (target: HTMLElement, piece: HTMLElement) => {
-  console.log(captures);
+// generate moves where
+const generatePseudoMoves = (king: HTMLImageElement, filteredPieces: HTMLImageElement[]): boolean => {
+  let canCapture: boolean = false;
+  filteredPieces.forEach((element) => {
+    canCapture = isValidMove(king, element);
+    if (canCapture) return true;
+  });
+  return false;
+};
 
+const locateKing = (turnToMove: Sides): boolean => {
+  const boardGridImgs = document.querySelectorAll<HTMLImageElement>(`#board-container .board-grid img`);
+  const imgsArray = Array.from(boardGridImgs);
+  // select a king that is of the same side as the one moving
+  const kingPiece = imgsArray.filter((img) => img.dataset.piece === "king" && img.dataset.side === turnToMove);
+  //choose black pieces to be checked for if they can land on the tile where the king is
+  const filteredPieces = imgsArray.filter((img) => img.dataset.side !== turnToMove);
+
+  const isInCheck = generatePseudoMoves(kingPiece[0], filteredPieces);
+  return isInCheck;
+};
+
+export const movePieceAction = (target: HTMLElement, piece: HTMLElement) => {
+  let turnToMove: Sides = "white";
+  if (moves.length % 2 !== 0) {
+    turnToMove = "black";
+  } else {
+    turnToMove = "white";
+  }
+  if (piece.dataset.side !== turnToMove) {
+    return;
+  }
+  const isChecked = locateKing(turnToMove);
+  if (isChecked) {
+    return;
+  }
+  const isValid = isValidMove(target, piece);
+  if (isValid) {
+    assignMove(target, piece.dataset.side as Sides);
+    countDown(turnToMove);
+  }
+
+  return;
+};
+
+export const isValidMove = (target: HTMLElement, piece: HTMLElement): boolean => {
+  //before a validmove we have to check for kings position
+  // then we check each pieces potential moves ?
   const pieceSquare = boardSquareToNumber(piece.dataset.square);
   const targetSquare = boardSquareToNumber(target.dataset.square);
   let turnToMove: Sides = "white";
-
   // denote a logic here for who moves here
   if (moves.length % 2 !== 0) {
     turnToMove = "black";
   }
-  if (piece.dataset.side !== turnToMove) {
-    return false;
-  }
+
   switch (piece.dataset.piece) {
     case "pawn": {
       const columnDifference =
@@ -153,7 +198,6 @@ export const isValidMove = (target: HTMLElement, piece: HTMLElement) => {
           if (target instanceof HTMLImageElement) {
             return false;
           }
-          assignMove(target, piece.dataset.side as Sides);
           return true;
         }
         return false;
@@ -164,7 +208,7 @@ export const isValidMove = (target: HTMLElement, piece: HTMLElement) => {
           (pieceSquare.column - 1 === targetSquare.column && columnDifference === 1) ||
           (pieceSquare.column + 1 === targetSquare.column && columnDifference === 1)
         ) {
-          return assignMove(target, piece.dataset.side as Sides);
+          return true;
         }
         return false;
       }
@@ -175,7 +219,7 @@ export const isValidMove = (target: HTMLElement, piece: HTMLElement) => {
       const columnMove = Math.abs(pieceSquare.column - targetSquare.column);
       const rowMove = Math.abs(pieceSquare.row - targetSquare.row);
       if ((columnMove === 2 && rowMove === 1) || (columnMove === 1 && rowMove === 2)) {
-        return assignMove(target, piece.dataset.side as Sides);
+        return true;
       }
       return false;
     }
@@ -187,7 +231,7 @@ export const isValidMove = (target: HTMLElement, piece: HTMLElement) => {
         if (isColliding) {
           return false;
         } else {
-          return assignMove(target, piece.dataset.side as Sides);
+          return true;
         }
       }
       return false;
@@ -201,7 +245,7 @@ export const isValidMove = (target: HTMLElement, piece: HTMLElement) => {
         if (isColliding) {
           return false;
         } else {
-          return assignMove(target, piece.dataset.side as Sides);
+          return true;
         }
       }
       return false;
@@ -219,7 +263,7 @@ export const isValidMove = (target: HTMLElement, piece: HTMLElement) => {
         if (isColliding) {
           return false;
         } else {
-          assignMove(target, piece.dataset.side as Sides);
+          console.log("RETURN TRUE");
           return true;
         }
       }
@@ -228,11 +272,17 @@ export const isValidMove = (target: HTMLElement, piece: HTMLElement) => {
     case "king": {
       const columnMove = Math.abs(pieceSquare.column - targetSquare.column);
       const rowMove = Math.abs(pieceSquare.row - targetSquare.row);
-      if (columnMove === 1 || rowMove === 1) {
-        console.log(rowMove, columnMove);
-        assignMove(target, piece.dataset.side as Sides);
+      if (
+        (columnMove === 1 && rowMove === 1) ||
+        (rowMove === 1 && columnMove === 1) ||
+        (rowMove === 1 && columnMove === 0) ||
+        (columnMove === 1 && rowMove === 0)
+      ) {
         return true;
       }
+      return false;
+    }
+    default: {
       return false;
     }
   }

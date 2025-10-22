@@ -1,7 +1,7 @@
 import "./style.css";
 import type { Sides } from "./types";
 import { drawChessBoard, drawChessPieces } from "./draw";
-import { isValidMove } from "./movement";
+import { isValidMove, movePieceAction } from "./movement";
 import { moves } from "./movement";
 import { formatTime, countDown } from "./timer";
 
@@ -55,7 +55,7 @@ const movePiece = () => {
       } // instance of when selected square actually exists so here we need to validate our move
     } else {
       // we have to validate where we are going from which square
-      isValidMove(square, selectedSquare);
+      movePieceAction(square, selectedSquare);
       delete selectedSquare.dataset.selected;
       selectedSquare = null;
     }
@@ -65,15 +65,7 @@ const movePiece = () => {
 
 const dragElement = (startPos: HTMLImageElement, target: HTMLElement) => {
   startPos.dataset.selected = "true";
-  const valid = isValidMove(target, startPos);
-  // stop timer for moved and
-  if (valid) {
-    if (moves.length % 2 !== 0) {
-      countDown("black");
-    } else {
-      countDown("white");
-    }
-  }
+  movePieceAction(target, startPos);
   delete startPos.dataset.selected;
   startPos.classList.remove("selected");
   return;
@@ -85,7 +77,7 @@ board.innerHTML = `
         <div id="timer" class="countdown">⏱️ ${opponentTimer}</div> 
         <div id="pieces" class="pieces"> </div>
       </div>
-    <div class="board-container">
+    <div id="board-container" class="board-container">
       <div class="board-numbers"></div>
       <div class="board-grid"></div>
     </div>
