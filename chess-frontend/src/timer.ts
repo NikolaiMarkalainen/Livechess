@@ -31,6 +31,8 @@ export const parseTime = (timeString: string): number => {
 export const countDown = (side: Sides) => { 
   const countdownDiv = document.querySelector(`[data-timerside=${side}]`) as HTMLDivElement;
   const rawText = countdownDiv.textContent
+  console.log(blackTimeLeft, whiteTimeLeft, countdownDiv.textContent)
+
   if (blackTimeLeft === 0 || whiteTimeLeft === 0) {
     if (side === "black") {
       blackTimeLeft = parseTime(rawText)
@@ -38,7 +40,6 @@ export const countDown = (side: Sides) => {
       whiteTimeLeft = parseTime(rawText)
     }
   }
-  console.log(blackTimeLeft, whiteTimeLeft, countdownDiv.textContent)
   let seconds = side === "black" ? blackTimeLeft : whiteTimeLeft
   let timeLeft = seconds;
   if (timerInterval) clearInterval(timerInterval);
@@ -50,5 +51,11 @@ export const countDown = (side: Sides) => {
   }
     countdownDiv.textContent = `⏱️ ${formatTime(timeLeft)}`;
     timeLeft -= 0.01;
+    if (side === "black") {
+      blackTimeLeft = timeLeft
+    } else {
+      whiteTimeLeft = timeLeft
+    }
   }, 10);
+
 }
