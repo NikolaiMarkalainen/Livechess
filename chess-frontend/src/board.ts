@@ -3,13 +3,6 @@ import type { Sides } from "./types";
 import { drawChessBoard, drawChessPieces } from "./draw";
 import { isValidMove } from "./movement";
 const board = document.querySelector<HTMLDivElement>("#board")!;
-
-
-
-const turnSwitch = (side: Sides) => {
-  console.log(side)
-}
-
 // need dropdown for gmae times
 
 let timer;
@@ -43,7 +36,40 @@ const countDown = (seconds: number) => {
 
 const movePiece = () => {
   const board = document.querySelector<HTMLDivElement>(".board-grid")!;
+  let draggable: HTMLImageElement
+  //draggable element
   let selectedSquare: HTMLElement | null;
+  board.addEventListener("drag", (e: DragEvent) => {
+    console.log("a?")
+  })
+
+  board.addEventListener("dragstart", (e: DragEvent) => {
+    const target = e.target as HTMLElement;
+    if (!target) return
+    if (target instanceof HTMLImageElement) {
+    draggable = target
+    target.classList.add("dragging")      
+    }
+  })
+  
+  board.addEventListener("dragend", (e: DragEvent) => {
+    e.preventDefault()
+    const ele = e.target as HTMLElement
+    ele.classList.remove("dragging");
+  })
+
+  board.addEventListener("dragover", (e: DragEvent) => {
+    e.preventDefault()
+  })
+
+  board.addEventListener("drop", (e: DragEvent) => {
+    e.preventDefault()
+    const target = e.target as HTMLElement;
+    if (!target) return
+    dragElement(draggable, target)
+  })
+
+
   board.addEventListener("click", (e) => {
     //general square on our grid can be div or img of a piece
     let square = e.target as HTMLElement | null;
@@ -60,22 +86,21 @@ const movePiece = () => {
       } // instance of when selected square actually exists so here we need to validate our move
     } else {
       // we have to validate where we are going from which square
-      const isValidMovement = isValidMove(square, selectedSquare);
-      if (isValidMovement) {
-        const side = selectedSquare.dataset.side;
-        delete selectedSquare.dataset.selected;
-        selectedSquare = null;
-        turnSwitch(side as Sides)
-      } else {
-        // refresh selectedsquare so we dont get stuck on one piece and unable to move
-        delete selectedSquare.dataset.selected;
-        selectedSquare = null;
-        return;
-      }
+      isValidMove(square, selectedSquare);
+      delete selectedSquare.dataset.selected;
+      selectedSquare = null;
     }
     selectedSquare?.classList.remove("selected");
   });
 };
+
+const dragElement = (startPos: HTMLImageElement, target: HTMLElement) => {
+  startPos.dataset.selected = "true";
+  isValidMove(target, startPos)
+  delete startPos.dataset.selected;
+  startPos.classList.remove("selected")
+  return;
+}
 
 board.innerHTML = `
   <div class="board-field">

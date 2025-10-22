@@ -9,3 +9,11 @@ export type boardPositions = {
 
 
 export const boardValues = ["A", "B", "C", "D", "E", "F", "G", "H"];
+
+
+export type Move = {
+  from: string;
+  to: string;
+  piece: Pieces;
+  captured?: Pieces;
+};

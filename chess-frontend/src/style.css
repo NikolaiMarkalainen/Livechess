@@ -113,6 +113,9 @@ body {
   }
 }
 
+.dragging {
+  opacity: 0.5
+}
 
 .block {
   display: none

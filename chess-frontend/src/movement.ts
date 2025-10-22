@@ -1,6 +1,13 @@
-import type { Sides, boardPositions } from "./types";
+import type { Sides, boardPositions, Move, Pieces } from "./types";
 import { boardValues } from "./types";
 
+
+
+
+const moves: Move[] = []
+
+
+console.log(moves)
 
 const boardSquareToNumber = (square: string | undefined): boardPositions => {
   if (!square) return { row: 0, column: 0 };
@@ -17,13 +24,22 @@ const boardNumberToLetter = (column: number): string => {
 
 
 
-
 export const assignMove = (target: HTMLElement, side: Sides) => {
+  let move: Move = {
+    from: "A1",
+    to: "A2",
+    piece: '' as Pieces, // or a default value
+    captured: undefined
+  };
+
   const setNewSquare = (targetSquare: HTMLElement, capture: boolean): boolean => {
+    console.log(moves)
+
     // fetch the selected piece
     const movingPiece = document.querySelector<HTMLImageElement>(`img[data-selected="true"]`);
     if (!movingPiece) return false;
-
+    move.piece = (movingPiece.dataset.piece) as Pieces
+    move.from = movingPiece.dataset.square!
     if (capture) {
       if (targetSquare instanceof HTMLImageElement) {
         const cellDiv = document.querySelector<HTMLDivElement>(`div[data-square=${targetSquare.dataset.square}]`);
@@ -31,6 +47,9 @@ export const assignMove = (target: HTMLElement, side: Sides) => {
         cellDiv.replaceChild(movingPiece, targetSquare);
         movingPiece.dataset.square = targetSquare.dataset.square;
         clearSelected();
+        move.to = targetSquare.dataset.square!
+        move.captured = targetSquare.dataset.piece! as Pieces
+        moves.push(move)
         return true;
       }
     }
@@ -39,6 +58,7 @@ export const assignMove = (target: HTMLElement, side: Sides) => {
     movingPiece.dataset.square = targetSquare.dataset.square;
     clearSelected();
     targetSquare.appendChild(movingPiece);
+    moves.push(move)
     return true;
   };
 
@@ -100,7 +120,15 @@ export const collidesWithPieces = (targetSquare: boardPositions, pieceSquare: bo
 export const isValidMove = (target: HTMLElement, piece: HTMLElement) => {
   const pieceSquare = boardSquareToNumber(piece.dataset.square);
   const targetSquare = boardSquareToNumber(target.dataset.square);
-  console.log(target);
+  let turnToMove : Sides = "white"
+
+  // denote a logic here for who moves here 
+  if (moves.length % 2 !== 0) {
+    turnToMove = "black"
+  }
+  if (piece.dataset.side !== turnToMove) {
+    return false
+  }
   switch (piece.dataset.piece) {
     case "pawn": {
       const columnDifference =
