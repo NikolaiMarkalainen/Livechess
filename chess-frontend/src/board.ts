@@ -133,23 +133,22 @@ const startGame = (side: Sides) => {
   }
 };
 
-// document.getElementById("black-btn")?.addEventListener("click", () => {
-//   startGame("black");
-//   const playerDiv = document.getElementById("player-div") as HTMLElement;
-//   const opponentDiv = document.getElementById("opponent-div") as HTMLElement;
-//   if (playerDiv && opponentDiv) {
-//     playerDiv.dataset.cside = "black";
-//     opponentDiv.dataset.cside = "white";
-//   }
-// });
-// document.getElementById("white-btn")?.addEventListener("click", () => {
-//   startGame("white");
-//   const playerDiv = document.getElementById("player-div") as HTMLElement;
-//   const opponentDiv = document.getElementById("opponent-div") as HTMLElement;
-//   if (playerDiv && opponentDiv) {
-//     playerDiv.dataset.cside = "white";
-//     opponentDiv.dataset.cside = "black";
-//   }
-// });
-startGame("white");
+document.getElementById("black-btn")?.addEventListener("click", () => {
+  startGame("black");
+  const playerDiv = document.getElementById("player-div") as HTMLElement;
+  const opponentDiv = document.getElementById("opponent-div") as HTMLElement;
+  if (playerDiv && opponentDiv) {
+    playerDiv.dataset.cside = "black";
+    opponentDiv.dataset.cside = "white";
+  }
+});
+document.getElementById("white-btn")?.addEventListener("click", () => {
+  startGame("white");
+  const playerDiv = document.getElementById("player-div") as HTMLElement;
+  const opponentDiv = document.getElementById("opponent-div") as HTMLElement;
+  if (playerDiv && opponentDiv) {
+    playerDiv.dataset.cside = "white";
+    opponentDiv.dataset.cside = "black";
+  }
+});
 movePiece();

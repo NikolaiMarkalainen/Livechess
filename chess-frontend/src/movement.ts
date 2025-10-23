@@ -17,6 +17,11 @@ export const captures: Captures[] = [
 
 const removePieces = (elem: HTMLElement) => {
   elem.classList.remove("wp", "wn", "wb", "wr", "wq", "wk", "bp", "bn", "bb", "br", "bq", "bk");
+  console.log(elem);
+  if (elem.dataset.side && elem.dataset.piece) {
+    delete elem.dataset.piece;
+    delete elem.dataset.side;
+  }
 };
 
 const boardDatasetToArray = (row: string, col: string): boardPositions => {
@@ -27,18 +32,18 @@ const boardDatasetToArray = (row: string, col: string): boardPositions => {
   };
 };
 
+// clear out data from target and add new from start
 const pushDataToSquare = (target: HTMLElement, start: HTMLElement) => {
   let knight;
   if (start.dataset.piece === "knight") {
     knight = "n";
   }
-  // remove imgs from both irregardless if they have them
   removePieces(target);
-  removePieces(start);
-  // allocate the target square with new data if its legal move
   target.dataset.piece = start.dataset.piece;
   target.dataset.side = start.dataset.side;
   target.classList.add(`${start.dataset.side![0]}${knight ?? start.dataset.piece![0]}`);
+  removePieces(start);
+
   clearSelected();
 };
 
@@ -72,7 +77,6 @@ const pushNewMove = (target: HTMLElement, start: HTMLElement, capture: boolean) 
 };
 
 export const assignMove = (target: HTMLElement, side: Sides) => {
-  console.log("assigningmove", target);
   const setNewSquare = (targetSquare: HTMLElement, capture: boolean) => {
     // fetch the selected piece
     const movingPiece = document.querySelector<HTMLDivElement>(`div[data-selected="true"]`);
@@ -112,7 +116,7 @@ export const collidesWithPieces = (target: boardPositions, start: boardPositions
       const square = document.querySelector<HTMLDivElement>(
         `div[data-row="${currentRow}"][data-column="${currentCol}"]`
       );
-      console.log(square, currentRow, currentCol);
+      console.log("SQUARE", square);
       // check if it has nested image
       if (square?.dataset.piece) {
         return true;
@@ -165,14 +169,12 @@ export const isValidMove = (target: HTMLElement, piece: HTMLElement): boolean =>
   // then we check each pieces potential moves ?
   const pieceSquare = boardDatasetToArray(piece.dataset.row!, piece.dataset.column!);
   const targetSquare = boardDatasetToArray(target.dataset.row!, target.dataset.column!);
-  console.log(pieceSquare, targetSquare);
   switch (piece.dataset.piece) {
     case "pawn": {
       const columnDifference =
         piece.dataset.side === "white" ? targetSquare.row - pieceSquare.row : pieceSquare.row - targetSquare.row;
       // we are moving on correct column this is allowed
       if (pieceSquare.column === targetSquare.column) {
-        console.log(pieceSquare.column, targetSquare.column);
         const startingRow = piece.dataset.side === "white" ? 2 : 7;
         // when walking forward with a pawn we always need to check whether there is collision
         // allow starterOpening to move 2 rows at once
