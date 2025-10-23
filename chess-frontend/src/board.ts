@@ -1,17 +1,21 @@
 import "./style.css";
 import type { Sides } from "./types";
 import { drawChessBoard, drawChessPieces } from "./draw";
-import { movePieceAction } from "./movement";
+import { movePieceAction, moves } from "./movement";
 import { formatTime } from "./timer";
 
 const board = document.querySelector<HTMLDivElement>("#board")!;
 let playerTimer;
 let opponentTimer;
+
+console.log(moves);
+
 const movePiece = () => {
   const board = document.querySelector<HTMLDivElement>(".board-grid")!;
   let draggable: HTMLDivElement;
+  let selectedSquare: HTMLElement | undefined;
+
   //draggable element
-  let selectedSquare: HTMLElement | null;
 
   board.addEventListener("dragstart", (e: DragEvent) => {
     const target = e.target as HTMLElement;
@@ -41,6 +45,8 @@ const movePiece = () => {
   });
 
   board.addEventListener("click", (e) => {
+    const side = moves.length % 2 !== 0 ? "black" : "white";
+
     //general square on our grid can be div or img of a piece
     let square = e.target as HTMLElement | null;
     if (!square) return;
@@ -49,16 +55,15 @@ const movePiece = () => {
       // we need to make sure that we are always grabbing an image element so a piece
       // this is the first grab of the player it always has to be a piece then we populate
       // selected square
-      if (square instanceof HTMLDivElement) {
+      if (square.dataset.piece && square.dataset.side === side) {
         selectedSquare = square;
         selectedSquare.dataset.selected = "true";
       } // instance of when selected square actually exists so here we need to validate our move
     } else {
       // we have to validate where we are going from which square
-      console.log(square, selectedSquare);
       movePieceAction(square, selectedSquare);
       delete selectedSquare.dataset.selected;
-      selectedSquare = null;
+      selectedSquare = undefined;
     }
     selectedSquare?.classList.remove("selected");
   });

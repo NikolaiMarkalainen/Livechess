@@ -122,7 +122,6 @@ export const drawCaptures = (captures: Captures[]) => {
   captures.forEach((capture) => {
     const opponentSide = capture.side === "white" ? "black" : "white";
     const capturesParent = document.querySelector(`[data-cside=${capture.side}] #pieces`) as HTMLDivElement;
-    console.log(capturesParent);
     capture.pieces.forEach((piece) => {
       if (!piece.drawn) {
         const element = document.createElement("img");

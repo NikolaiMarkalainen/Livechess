@@ -27,94 +27,94 @@ const boardDatasetToArray = (row: string, col: string): boardPositions => {
   };
 };
 
-const boardNumberToLetter = (column: number): string => {
-  return boardValues[column - 1];
+const pushDataToSquare = (target: HTMLElement, start: HTMLElement) => {
+  let knight;
+  if (start.dataset.piece === "knight") {
+    knight = "n";
+  }
+  // remove imgs from both irregardless if they have them
+  removePieces(target);
+  removePieces(start);
+  // allocate the target square with new data if its legal move
+  target.dataset.piece = start.dataset.piece;
+  target.dataset.side = start.dataset.side;
+  target.classList.add(`${start.dataset.side![0]}${knight ?? start.dataset.piece![0]}`);
+  clearSelected();
 };
 
-export const assignMove = (target: HTMLElement, side: Sides): boolean => {
+const clearSelected = () => {
+  const movingPiece = document.querySelector<HTMLDivElement>(`div[data-selected="true"]`);
+  delete movingPiece?.dataset.selected;
+};
+
+const pushNewMove = (target: HTMLElement, start: HTMLElement, capture: boolean) => {
   let move: Move = {
     from: { row: 1, column: 1 },
     to: { row: 1, column: 1 },
     piece: "" as Pieces,
     captured: undefined,
   };
+  move.piece = start.dataset.piece as Pieces;
+  move.from = { row: Number(start.dataset.row), column: Number(start.dataset.column) };
+  move.to = { row: Number(target.dataset.row), column: Number(target.dataset.column) };
 
-  const setNewSquare = (targetSquare: HTMLElement, capture: boolean): boolean => {
+  if (capture) {
+    move.captured = target.dataset.piece! as Pieces;
+    captures
+      .find((c) => c.side === start.dataset.side)
+      ?.pieces.push({
+        piece: move.captured,
+        drawn: false,
+      });
+    drawCaptures(captures);
+  }
+  moves.push(move);
+};
+
+export const assignMove = (target: HTMLElement, side: Sides) => {
+  console.log("assigningmove", target);
+  const setNewSquare = (targetSquare: HTMLElement, capture: boolean) => {
     // fetch the selected piece
     const movingPiece = document.querySelector<HTMLDivElement>(`div[data-selected="true"]`);
-    if (!movingPiece) return false;
-    move.piece = movingPiece.dataset.piece as Pieces;
-    move.from = { row: Number(movingPiece.dataset.row), column: Number(movingPiece.dataset.column) };
-    if (capture) {
-      if (targetSquare.dataset.piece !== undefined) {
-        const cellDiv = document.querySelector<HTMLDivElement>(`div[data-square=${targetSquare.dataset.square}]`);
-        if (!cellDiv) return false;
-        cellDiv.replaceChild(movingPiece, targetSquare);
-        movingPiece.dataset.square = targetSquare.dataset.square;
-        clearSelected();
-        move.from = { row: Number(targetSquare.dataset.row), column: Number(targetSquare.dataset.column) };
-        move.captured = targetSquare.dataset.piece! as Pieces;
-        captures
-          .find((c) => c.side === side)
-          ?.pieces.push({
-            piece: move.captured,
-            drawn: false,
-          });
-        moves.push(move);
-        drawCaptures(captures);
-        console.log("?");
-        return true;
-      }
-    }
-    // update the piece position with new one to monitor whats happening
-    // the piece is no longer moving we need to remove the selected flag from it
-    movingPiece.dataset.column = targetSquare.dataset.column;
-    movingPiece.dataset.row = targetSquare.dataset.row;
-    removePieces(movingPiece);
-    removePieces(targetSquare);
-    targetSquare.classList.add(`${side[0]}${movingPiece.dataset.piece![0]}`);
-    clearSelected();
-    moves.push(move);
-    return true;
-  };
 
-  const clearSelected = () => {
-    const movingPiece = document.querySelector<HTMLDivElement>(`img[data-selected="true"]`);
-    delete movingPiece?.dataset.selected;
+    if (!movingPiece) return false;
+
+    pushDataToSquare(targetSquare, movingPiece);
+    pushNewMove(targetSquare, movingPiece, capture);
   };
 
   if (target.dataset.piece !== undefined) {
     // capture event
     if (target.dataset.side !== side) {
-      return setNewSquare(target, true);
+      setNewSquare(target, true);
     }
   } else {
-    return setNewSquare(target, false);
+    setNewSquare(target, false);
   }
-  return false;
 };
 
-export const collidesWithPieces = (targetSquare: boardPositions, pieceSquare: boardPositions) => {
+export const collidesWithPieces = (target: boardPositions, start: boardPositions) => {
   // check from pos 1 to pos 2 for different pieces so for example we need rook bishop and queen
-  const rowDiff = targetSquare.row - pieceSquare.row;
-  const columnDiff = targetSquare.column - pieceSquare.column;
+  const rowDiff = target.row - start.row;
+  const columnDiff = target.column - start.column;
 
-  let currentRow = pieceSquare.row;
-  let currentCol = pieceSquare.column;
+  let currentRow = start.row;
+  let currentCol = start.column;
 
-  const isPathBlocked = (targetSquare: boardPositions, rowMove: number, colMove: number) => {
-    while (currentRow !== targetSquare.row || currentCol !== targetSquare.column) {
+  const isPathBlocked = (target: boardPositions, rowMove: number, colMove: number) => {
+    while (currentRow !== target.row || currentCol !== target.column) {
       currentRow += rowMove;
       currentCol += colMove;
       // exit early and validate last square during assignMove function
-      if (currentRow === targetSquare.row && currentCol === targetSquare.column) {
+      if (currentRow === target.row && currentCol === target.column) {
         break;
       }
-      const columnLetter = boardNumberToLetter(currentCol);
-      const square = document.querySelector<HTMLDivElement>(`div[data-square=${columnLetter}${currentRow}]`);
-
+      const square = document.querySelector<HTMLDivElement>(
+        `div[data-row="${currentRow}"][data-column="${currentCol}"]`
+      );
+      console.log(square, currentRow, currentCol);
       // check if it has nested image
-      if (square?.hasChildNodes()) {
+      if (square?.dataset.piece) {
         return true;
       }
     }
@@ -125,61 +125,36 @@ export const collidesWithPieces = (targetSquare: boardPositions, pieceSquare: bo
   if (Math.abs(rowDiff) === Math.abs(columnDiff)) {
     const rowMove = rowDiff > 0 ? 1 : -1;
     const colMove = columnDiff > 0 ? 1 : -1;
-    return isPathBlocked(targetSquare, rowMove, colMove);
+    return isPathBlocked(target, rowMove, colMove);
     // rook / queen mov
   } else if (rowDiff === 0 || columnDiff === 0) {
     const rowMove = rowDiff === 0 ? 0 : rowDiff > 0 ? 1 : -1;
     const colMove = columnDiff === 0 ? 0 : columnDiff > 0 ? 1 : -1;
-    return isPathBlocked(targetSquare, rowMove, colMove);
+    return isPathBlocked(target, rowMove, colMove);
   }
 };
 
-// generate moves where
-// const generatePseudoMoves = (king: HTMLDivElement, filteredPieces: HTMLDivElement[]): boolean => {
-//   let canCapture: boolean[] | undefined = [];
-//   filteredPieces.forEach((element) => {
-//     canCapture.push(isValidMove(king, element));
-//   });
-//   return canCapture.includes(true);
-// };
-
-// const locateKing = (turnToMove: Sides): boolean => {
-//   const boardGridImgs = document.querySelectorAll<HTMLDivElement>(`#board-container .board-grid`);
-//   const imgsArray = Array.from(boardGridImgs);
-//   // select a king that is of the same side as the one moving
-//   const kingPiece = imgsArray.filter((img) => img.dataset.piece === "king" && img.dataset.side === turnToMove);
-//   //choose black pieces to be checked for if they can land on the tile where the king is
-//   const filteredPieces = imgsArray.filter((img) => img.dataset.side !== turnToMove);
-
-//   const isInCheck = generatePseudoMoves(kingPiece[0], filteredPieces);
-//   return isInCheck;
-// };
-
 export const movePieceAction = (target: HTMLElement, piece: HTMLElement) => {
   let turnToMove: Sides = "white";
-  console.log(moves);
   if (moves.length % 2 !== 0) {
     turnToMove = "black";
   } else {
     turnToMove = "white";
   }
   if (piece.dataset.side !== turnToMove) {
-    console.log(piece.dataset.side);
     return;
   }
   // const isChecked = locateKing(turnToMove);
   // if (isChecked) {
-  //   console.log("wht");
 
   //   return;
   // }
-  console.log(target, piece);
   const isValid = isValidMove(target, piece);
-  console.log(isValid);
 
   if (isValid) {
     assignMove(target, piece.dataset.side as Sides);
-    countDown(turnToMove);
+    // countDown(turnToMove);
+    return;
   }
 
   return;
@@ -188,16 +163,16 @@ export const movePieceAction = (target: HTMLElement, piece: HTMLElement) => {
 export const isValidMove = (target: HTMLElement, piece: HTMLElement): boolean => {
   //before a validmove we have to check for kings position
   // then we check each pieces potential moves ?
-  console.log(target, piece);
-
-  const pieceSquare = boardDatasetToArray(piece.dataset.row!, target.dataset.column!);
+  const pieceSquare = boardDatasetToArray(piece.dataset.row!, piece.dataset.column!);
   const targetSquare = boardDatasetToArray(target.dataset.row!, target.dataset.column!);
+  console.log(pieceSquare, targetSquare);
   switch (piece.dataset.piece) {
     case "pawn": {
       const columnDifference =
         piece.dataset.side === "white" ? targetSquare.row - pieceSquare.row : pieceSquare.row - targetSquare.row;
       // we are moving on correct column this is allowed
       if (pieceSquare.column === targetSquare.column) {
+        console.log(pieceSquare.column, targetSquare.column);
         const startingRow = piece.dataset.side === "white" ? 2 : 7;
         // when walking forward with a pawn we always need to check whether there is collision
         // allow starterOpening to move 2 rows at once
