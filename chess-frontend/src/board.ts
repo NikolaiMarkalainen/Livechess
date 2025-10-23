@@ -3,27 +3,40 @@ import type { Sides } from "./types";
 import { drawChessBoard, drawChessPieces } from "./draw";
 import { movePieceAction, moves } from "./movement";
 import { formatTime } from "./timer";
+import { showValidMoves } from "./simulate";
 
 const board = document.querySelector<HTMLDivElement>("#board")!;
 let playerTimer;
 let opponentTimer;
 
-console.log(moves);
+const pieceImages: Record<string, HTMLImageElement> = {};
+
+const preloadPieces = () => {
+  for (const side of ["white", "black"]) {
+    for (const piece of ["pawn", "rook", "knight", "bishop", "queen", "king"]) {
+      const key = `${piece}-${side}`;
+      const img = new Image();
+      img.src = `/pieces/${key}.png`;
+      pieceImages[key] = img;
+    }
+  }
+};
 
 const movePiece = () => {
   const board = document.querySelector<HTMLDivElement>(".board-grid")!;
   let draggable: HTMLDivElement;
   let selectedSquare: HTMLElement | undefined;
 
-  //draggable element
-
   board.addEventListener("dragstart", (e: DragEvent) => {
     const target = e.target as HTMLElement;
+    const img = pieceImages[`${target.dataset.piece}-${target.dataset.side}`];
+    e.dataTransfer?.setDragImage(img, 32, 32);
+    showValidMoves(target);
     if (!target) return;
-
     if (target instanceof HTMLDivElement) {
       draggable = target;
       target.classList.add("dragging");
+      console.log("dragging");
     }
   });
 
@@ -46,21 +59,16 @@ const movePiece = () => {
 
   board.addEventListener("click", (e) => {
     const side = moves.length % 2 !== 0 ? "black" : "white";
-
-    //general square on our grid can be div or img of a piece
     let square = e.target as HTMLElement | null;
     if (!square) return;
+    showValidMoves(square);
 
     if (!selectedSquare) {
-      // we need to make sure that we are always grabbing an image element so a piece
-      // this is the first grab of the player it always has to be a piece then we populate
-      // selected square
       if (square.dataset.piece && square.dataset.side === side) {
         selectedSquare = square;
         selectedSquare.dataset.selected = "true";
-      } // instance of when selected square actually exists so here we need to validate our move
+      }
     } else {
-      // we have to validate where we are going from which square
       movePieceAction(square, selectedSquare);
       delete selectedSquare.dataset.selected;
       selectedSquare = undefined;
@@ -133,22 +141,25 @@ const startGame = (side: Sides) => {
   }
 };
 
-document.getElementById("black-btn")?.addEventListener("click", () => {
-  startGame("black");
-  const playerDiv = document.getElementById("player-div") as HTMLElement;
-  const opponentDiv = document.getElementById("opponent-div") as HTMLElement;
-  if (playerDiv && opponentDiv) {
-    playerDiv.dataset.cside = "black";
-    opponentDiv.dataset.cside = "white";
-  }
-});
-document.getElementById("white-btn")?.addEventListener("click", () => {
-  startGame("white");
-  const playerDiv = document.getElementById("player-div") as HTMLElement;
-  const opponentDiv = document.getElementById("opponent-div") as HTMLElement;
-  if (playerDiv && opponentDiv) {
-    playerDiv.dataset.cside = "white";
-    opponentDiv.dataset.cside = "black";
-  }
-});
+// document.getElementById("black-btn")?.addEventListener("click", () => {
+//   startGame("black");
+//   const playerDiv = document.getElementById("player-div") as HTMLElement;
+//   const opponentDiv = document.getElementById("opponent-div") as HTMLElement;
+//   if (playerDiv && opponentDiv) {
+//     playerDiv.dataset.cside = "black";
+//     opponentDiv.dataset.cside = "white";
+//   }
+// });
+// document.getElementById("white-btn")?.addEventListener("click", () => {
+//   startGame("white");
+//   const playerDiv = document.getElementById("player-div") as HTMLElement;
+//   const opponentDiv = document.getElementById("opponent-div") as HTMLElement;
+//   if (playerDiv && opponentDiv) {
+//     playerDiv.dataset.cside = "white";
+//     opponentDiv.dataset.cside = "black";
+//   }
+// });
+preloadPieces();
+startGame("white");
+
 movePiece();

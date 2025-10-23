@@ -78,17 +78,13 @@ const pushNewMove = (target: HTMLElement, start: HTMLElement, capture: boolean) 
 
 export const assignMove = (target: HTMLElement, side: Sides) => {
   const setNewSquare = (targetSquare: HTMLElement, capture: boolean) => {
-    // fetch the selected piece
     const movingPiece = document.querySelector<HTMLDivElement>(`div[data-selected="true"]`);
-
     if (!movingPiece) return false;
-
     pushDataToSquare(targetSquare, movingPiece);
     pushNewMove(targetSquare, movingPiece, capture);
   };
 
   if (target.dataset.piece !== undefined) {
-    // capture event
     if (target.dataset.side !== side) {
       setNewSquare(target, true);
     }
@@ -98,7 +94,6 @@ export const assignMove = (target: HTMLElement, side: Sides) => {
 };
 
 export const collidesWithPieces = (target: boardPositions, start: boardPositions) => {
-  // check from pos 1 to pos 2 for different pieces so for example we need rook bishop and queen
   const rowDiff = target.row - start.row;
   const columnDiff = target.column - start.column;
 
@@ -109,7 +104,6 @@ export const collidesWithPieces = (target: boardPositions, start: boardPositions
     while (currentRow !== target.row || currentCol !== target.column) {
       currentRow += rowMove;
       currentCol += colMove;
-      // exit early and validate last square during assignMove function
       if (currentRow === target.row && currentCol === target.column) {
         break;
       }
@@ -117,7 +111,6 @@ export const collidesWithPieces = (target: boardPositions, start: boardPositions
         `div[data-row="${currentRow}"][data-column="${currentCol}"]`
       );
       console.log("SQUARE", square);
-      // check if it has nested image
       if (square?.dataset.piece) {
         return true;
       }
@@ -165,19 +158,14 @@ export const movePieceAction = (target: HTMLElement, piece: HTMLElement) => {
 };
 
 export const isValidMove = (target: HTMLElement, piece: HTMLElement): boolean => {
-  //before a validmove we have to check for kings position
-  // then we check each pieces potential moves ?
   const pieceSquare = boardDatasetToArray(piece.dataset.row!, piece.dataset.column!);
   const targetSquare = boardDatasetToArray(target.dataset.row!, target.dataset.column!);
   switch (piece.dataset.piece) {
     case "pawn": {
       const columnDifference =
         piece.dataset.side === "white" ? targetSquare.row - pieceSquare.row : pieceSquare.row - targetSquare.row;
-      // we are moving on correct column this is allowed
       if (pieceSquare.column === targetSquare.column) {
         const startingRow = piece.dataset.side === "white" ? 2 : 7;
-        // when walking forward with a pawn we always need to check whether there is collision
-        // allow starterOpening to move 2 rows at once
         if (columnDifference === 1 || (columnDifference === 2 && pieceSquare.row === startingRow)) {
           // dont allow capturin from front
           if (target.dataset.piece !== undefined) {
@@ -187,7 +175,6 @@ export const isValidMove = (target: HTMLElement, piece: HTMLElement): boolean =>
         }
         return false;
       }
-      // capture event check if we move onto image here and not blank div
       if (target.dataset.piece !== undefined) {
         if (
           (pieceSquare.column - 1 === targetSquare.column && columnDifference === 1) ||
@@ -200,7 +187,6 @@ export const isValidMove = (target: HTMLElement, piece: HTMLElement): boolean =>
       return false;
     }
     case "knight": {
-      //knight can move in L shape so +2 in one axis and 1 on the other
       const columnMove = Math.abs(pieceSquare.column - targetSquare.column);
       const rowMove = Math.abs(pieceSquare.row - targetSquare.row);
       if ((columnMove === 2 && rowMove === 1) || (columnMove === 1 && rowMove === 2)) {
@@ -222,7 +208,6 @@ export const isValidMove = (target: HTMLElement, piece: HTMLElement): boolean =>
       return false;
     }
     case "rook": {
-      //rook either moves columns or rows
       const columnMove = Math.abs(pieceSquare.column - targetSquare.column);
       const rowMove = Math.abs(pieceSquare.row - targetSquare.row);
       if ((columnMove >= 1 && rowMove === 0) || (rowMove >= 1 && columnMove === 0)) {
@@ -238,7 +223,6 @@ export const isValidMove = (target: HTMLElement, piece: HTMLElement): boolean =>
     case "queen": {
       const columnMove = Math.abs(pieceSquare.column - targetSquare.column);
       const rowMove = Math.abs(pieceSquare.row - targetSquare.row);
-      // checks for bishop or roo ktype mvoes
       if (
         (columnMove >= 1 && rowMove >= 1 && rowMove === columnMove) ||
         (columnMove >= 1 && rowMove === 0) ||

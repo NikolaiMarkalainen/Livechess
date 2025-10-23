@@ -107,6 +107,8 @@ export const drawChessBoard = (side: Sides) => {
       const square = document.createElement("div");
       square.dataset.row = `${8 - row}`;
       square.dataset.column = `${1 + column}`;
+      square.draggable = true;
+
       if ((row + column) % 2 === 0) {
         square.className = "board-primary";
       } else {

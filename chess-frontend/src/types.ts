@@ -25,3 +25,10 @@ export type Captures = {
   side: Sides;
   pieces: CapturedPiece[];
 };
+
+export type BoardState = {
+  piece?: Pieces;
+  row?: number;
+  column?: number;
+  side?: Sides;
+};

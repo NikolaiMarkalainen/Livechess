@@ -75,9 +75,6 @@ body {
   display: flex;
 }
 
-.chess-piece {
-}
-
 .board-start {
   display: flex;
   flex-direction: column;
