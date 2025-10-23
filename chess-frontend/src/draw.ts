@@ -4,7 +4,7 @@ export const drawChessPieces = (side: Sides) => {
     side === "white"
       ? [
           { row: 1, column: 2 }, // B1
-          { row: 1, column: 7 }, // G1
+          { row: 4, column: 1 }, // G1
         ]
       : [
           { row: 8, column: 2 }, // B8
@@ -15,7 +15,7 @@ export const drawChessPieces = (side: Sides) => {
     side === "white"
       ? [
           { row: 1, column: 3 }, // C1
-          { row: 1, column: 6 }, // F1
+          { row: 4, column: 3 }, // F1
         ]
       : [
           { row: 8, column: 3 }, // C8
@@ -36,7 +36,7 @@ export const drawChessPieces = (side: Sides) => {
   const queenSquare: boardPositions[] =
     side === "white"
       ? [{ row: 1, column: 4 }] // D1
-      : [{ row: 8, column: 4 }]; // D8
+      : [{ row: 5, column: 6 }]; // D8
 
   const kingSquare: boardPositions[] =
     side === "white"
@@ -45,7 +45,7 @@ export const drawChessPieces = (side: Sides) => {
 
   const pawnRow = side === "white" ? 2 : 7;
 
-  for (let i = 0; i < 8; i++) {
+  for (let i = 0; i < 5; i++) {
     const square = document.querySelector(`[data-row="${pawnRow}"][data-column="${i + 1}"]`) as HTMLElement;
     if (!square) return;
     square.classList.add(`${side[0]}p`);

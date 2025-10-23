@@ -1,4 +1,6 @@
 import type { boardPositions, BoardState, Pieces, Sides } from "./types";
+import { history } from "./movement";
+
 export const getKingSquare = (side: Sides, boardState: BoardState[][]): boardPositions | undefined => {
   for (let r = 1; r <= 8; r++) {
     for (let c = 1; c <= 8; c++) {
@@ -31,7 +33,7 @@ export const showValidMoves = (start: HTMLElement): boardPositions[] => {
 
 export const isSquareUnderAttack = (pos: boardPositions, side: Sides, boardState: BoardState[][]): boolean => {
   const opponent = side === "white" ? "black" : "white";
-
+  console.log(history);
   for (let r = 1; r <= 8; r++) {
     for (let c = 1; c <= 8; c++) {
       const piece = boardState[r][c];
@@ -129,6 +131,8 @@ export const validateSimulatedMoves = (
 
   return !inCheck;
 };
+
+const shiftPiecePosition = (piece: Pieces) => {};
 
 const simulateMovements = (
   row: number,
@@ -298,13 +302,38 @@ const simulateMovements = (
           moves.push({ row: r, column: c });
         }
       }
+      const kingHasMoved = history.some((m) => m.piece === "king" && m.side === start.dataset.side);
 
+      if (kingHasMoved) break;
+      const rookKingside = start.dataset.side === "black" ? { row: 8, column: 8 } : { row: 1, column: 8 };
+      const rookQueenside = start.dataset.side === "black" ? { row: 8, column: 1 } : { row: 1, column: 1 };
+      const rookKingsideHasMoved = history.some(
+        (m) =>
+          m.piece === "rook" &&
+          m.side === start.dataset.side &&
+          m.from.row === rookKingside.row &&
+          m.from.column === rookKingside.column
+      );
+
+      const rookQueensideHasMoved = history.some(
+        (m) =>
+          m.piece === "rook" &&
+          m.side === start.dataset.side &&
+          m.from.row === rookQueenside.row &&
+          m.from.column === rookQueenside.column
+      );
+      if (!rookKingsideHasMoved) {
+        for (let i = 7; i === 6; i--) {
+          isSquareUnderAttack({ row: rookKingside.row, column: i }, start.dataset.side, boardState);
+        }
+      }
+
+      if (!rookQueensideHasMoved) {
+      }
       break;
+      // check kingside
     }
   }
   const pos = getKingSquare(start.dataset.side as Sides, boardState);
-  if (pos) {
-    console.log(isSquareUnderAttack(pos, start.dataset.side as Sides, boardState));
-  }
   return moves.filter((m) => validateSimulatedMoves(pos!, start.dataset.side as Sides, start, m, boardState));
 };
