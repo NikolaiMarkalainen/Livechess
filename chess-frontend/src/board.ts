@@ -31,7 +31,11 @@ const movePiece = () => {
     const target = e.target as HTMLElement;
     const img = pieceImages[`${target.dataset.piece}-${target.dataset.side}`];
     e.dataTransfer?.setDragImage(img, 32, 32);
-    showValidMoves(target);
+    const moves = showValidMoves(target);
+    moves.forEach((m) => {
+      const square = document.querySelector<HTMLDivElement>(`div[data-row="${m.row}"][data-column="${m.column}"]`);
+      square?.classList.add("highlight");
+    });
     if (!target) return;
     if (target instanceof HTMLDivElement) {
       draggable = target;
@@ -44,6 +48,10 @@ const movePiece = () => {
     e.preventDefault();
     const ele = e.target as HTMLElement;
     ele.classList.remove("dragging");
+    const highlights = document.querySelectorAll<HTMLDivElement>(`div.highlight`);
+    highlights.forEach((h) => {
+      h.classList.remove("highlight");
+    });
   });
 
   board.addEventListener("dragover", (e: DragEvent) => {
@@ -141,25 +149,25 @@ const startGame = (side: Sides) => {
   }
 };
 
-// document.getElementById("black-btn")?.addEventListener("click", () => {
-//   startGame("black");
-//   const playerDiv = document.getElementById("player-div") as HTMLElement;
-//   const opponentDiv = document.getElementById("opponent-div") as HTMLElement;
-//   if (playerDiv && opponentDiv) {
-//     playerDiv.dataset.cside = "black";
-//     opponentDiv.dataset.cside = "white";
-//   }
-// });
-// document.getElementById("white-btn")?.addEventListener("click", () => {
-//   startGame("white");
-//   const playerDiv = document.getElementById("player-div") as HTMLElement;
-//   const opponentDiv = document.getElementById("opponent-div") as HTMLElement;
-//   if (playerDiv && opponentDiv) {
-//     playerDiv.dataset.cside = "white";
-//     opponentDiv.dataset.cside = "black";
-//   }
-// });
+document.getElementById("black-btn")?.addEventListener("click", () => {
+  startGame("black");
+  const playerDiv = document.getElementById("player-div") as HTMLElement;
+  const opponentDiv = document.getElementById("opponent-div") as HTMLElement;
+  if (playerDiv && opponentDiv) {
+    playerDiv.dataset.cside = "black";
+    opponentDiv.dataset.cside = "white";
+  }
+});
+document.getElementById("white-btn")?.addEventListener("click", () => {
+  startGame("white");
+  const playerDiv = document.getElementById("player-div") as HTMLElement;
+  const opponentDiv = document.getElementById("opponent-div") as HTMLElement;
+  if (playerDiv && opponentDiv) {
+    playerDiv.dataset.cside = "white";
+    opponentDiv.dataset.cside = "black";
+  }
+});
 preloadPieces();
-startGame("white");
+// startGame("white");
 
 movePiece();

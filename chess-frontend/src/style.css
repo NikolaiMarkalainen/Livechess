@@ -205,3 +205,23 @@ body {
   background-repeat: no-repeat;
   background-position: center;
 }
+
+/* Base highlight class */
+.highlight {
+  position: relative;
+}
+
+/* Circle for empty squares */
+.highlight::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 30%; /* adjust size */
+  height: 30%;
+  background-color: gray; /* semi-transparent green */
+  border-radius: 50%;
+  pointer-events: none; /* doesn't block clicks */
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}

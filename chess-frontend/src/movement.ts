@@ -150,7 +150,7 @@ export const movePieceAction = (target: HTMLElement, piece: HTMLElement) => {
 
   if (isValid) {
     assignMove(target, piece.dataset.side as Sides);
-    // countDown(turnToMove);
+    countDown(turnToMove);
     return;
   }
 

@@ -28,7 +28,5 @@ export type Captures = {
 
 export type BoardState = {
   piece?: Pieces;
-  row?: number;
-  column?: number;
   side?: Sides;
 };
