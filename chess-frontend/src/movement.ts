@@ -3,7 +3,7 @@ import { countDown } from "./timer";
 import type { Sides, boardPositions, Move, Pieces, Captures } from "./types";
 import { boardValues } from "./types";
 
-export const moves: Move[] = [];
+export const history: Move[] = [];
 export const captures: Captures[] = [
   {
     side: "white",
@@ -17,7 +17,6 @@ export const captures: Captures[] = [
 
 const removePieces = (elem: HTMLElement) => {
   elem.classList.remove("wp", "wn", "wb", "wr", "wq", "wk", "bp", "bn", "bb", "br", "bq", "bk");
-  console.log(elem);
   if (elem.dataset.side && elem.dataset.piece) {
     delete elem.dataset.piece;
     delete elem.dataset.side;
@@ -73,7 +72,7 @@ const pushNewMove = (target: HTMLElement, start: HTMLElement, capture: boolean) 
       });
     drawCaptures(captures);
   }
-  moves.push(move);
+  history.push(move);
 };
 
 export const assignMove = (target: HTMLElement, side: Sides) => {
@@ -110,7 +109,6 @@ export const collidesWithPieces = (target: boardPositions, start: boardPositions
       const square = document.querySelector<HTMLDivElement>(
         `div[data-row="${currentRow}"][data-column="${currentCol}"]`
       );
-      console.log("SQUARE", square);
       if (square?.dataset.piece) {
         return true;
       }
@@ -133,7 +131,7 @@ export const collidesWithPieces = (target: boardPositions, start: boardPositions
 
 export const movePieceAction = (target: HTMLElement, piece: HTMLElement) => {
   let turnToMove: Sides = "white";
-  if (moves.length % 2 !== 0) {
+  if (history.length % 2 !== 0) {
     turnToMove = "black";
   } else {
     turnToMove = "white";

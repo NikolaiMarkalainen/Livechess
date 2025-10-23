@@ -1,7 +1,7 @@
 import "./style.css";
 import type { Sides } from "./types";
 import { drawChessBoard, drawChessPieces } from "./draw";
-import { movePieceAction, moves } from "./movement";
+import { movePieceAction, history } from "./movement";
 import { formatTime } from "./timer";
 import { showValidMoves } from "./simulate";
 
@@ -40,7 +40,6 @@ const movePiece = () => {
     if (target instanceof HTMLDivElement) {
       draggable = target;
       target.classList.add("dragging");
-      console.log("dragging");
     }
   });
 
@@ -66,7 +65,7 @@ const movePiece = () => {
   });
 
   board.addEventListener("click", (e) => {
-    const side = moves.length % 2 !== 0 ? "black" : "white";
+    const side = history.length % 2 !== 0 ? "black" : "white";
     let square = e.target as HTMLElement | null;
     if (!square) return;
     showValidMoves(square);

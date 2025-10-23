@@ -1,7 +1,17 @@
 import type { boardPositions, BoardState, Pieces, Sides } from "./types";
+export const getKingSquare = (side: Sides, boardState: BoardState[][]): boardPositions | undefined => {
+  for (let r = 1; r <= 8; r++) {
+    for (let c = 1; c <= 8; c++) {
+      const pos = boardState[r][c];
+      if (pos.piece === "king" && pos.side === side) {
+        return { row: r, column: c };
+      }
+    }
+  }
+  return undefined;
+};
 
 export const showValidMoves = (start: HTMLElement): boardPositions[] => {
-  console.log(start);
   if (!start.dataset.piece) return [];
 
   const row = Number(start.dataset.row);
@@ -16,8 +26,108 @@ export const showValidMoves = (start: HTMLElement): boardPositions[] => {
       side: div.dataset.side as Sides | undefined,
     };
   });
-  console.log(boardState);
   return simulateMovements(row, col, start, boardState);
+};
+
+export const isSquareUnderAttack = (pos: boardPositions, side: Sides, boardState: BoardState[][]): boolean => {
+  const opponent = side === "white" ? "black" : "white";
+
+  for (let r = 1; r <= 8; r++) {
+    for (let c = 1; c <= 8; c++) {
+      const piece = boardState[r][c];
+      if (!piece?.piece || piece.side !== opponent) continue;
+
+      switch (piece.piece) {
+        case "pawn": {
+          const dir = opponent === "white" ? 1 : -1;
+          if (r + dir === pos.row && (c + 1 === pos.column || c - 1 === pos.column)) return true;
+          break;
+        }
+
+        case "knight": {
+          const knightMoves = [
+            { dr: 2, dc: 1 },
+            { dr: 2, dc: -1 },
+            { dr: -2, dc: 1 },
+            { dr: -2, dc: -1 },
+            { dr: 1, dc: 2 },
+            { dr: 1, dc: -2 },
+            { dr: -1, dc: 2 },
+            { dr: -1, dc: -2 },
+          ];
+          for (const { dr, dc } of knightMoves) {
+            if (r + dr === pos.row && c + dc === pos.column) return true;
+          }
+          break;
+        }
+
+        case "bishop":
+        case "rook":
+        case "queen": {
+          const directions: { dr: number; dc: number }[] = [];
+
+          if (piece.piece === "bishop" || piece.piece === "queen")
+            directions.push({ dr: 1, dc: 1 }, { dr: 1, dc: -1 }, { dr: -1, dc: 1 }, { dr: -1, dc: -1 });
+
+          if (piece.piece === "rook" || piece.piece === "queen")
+            directions.push({ dr: 1, dc: 0 }, { dr: -1, dc: 0 }, { dr: 0, dc: 1 }, { dr: 0, dc: -1 });
+
+          for (const { dr, dc } of directions) {
+            let rr = r + dr;
+            let cc = c + dc;
+            while (rr >= 1 && rr <= 8 && cc >= 1 && cc <= 8) {
+              const target = boardState[rr][cc];
+              if (rr === pos.row && cc === pos.column) return true;
+              if (target?.piece) break; // blocked
+              rr += dr;
+              cc += dc;
+            }
+          }
+          break;
+        }
+
+        case "king": {
+          const kingDirs = [
+            { dr: 1, dc: 0 },
+            { dr: -1, dc: 0 },
+            { dr: 0, dc: 1 },
+            { dr: 0, dc: -1 },
+            { dr: 1, dc: 1 },
+            { dr: 1, dc: -1 },
+            { dr: -1, dc: 1 },
+            { dr: -1, dc: -1 },
+          ];
+          for (const { dr, dc } of kingDirs) {
+            if (r + dr === pos.row && c + dc === pos.column) return true;
+          }
+          break;
+        }
+      }
+    }
+  }
+
+  return false;
+};
+
+export const validateSimulatedMoves = (
+  kingPos: boardPositions,
+  side: Sides,
+  start: HTMLElement,
+  move: boardPositions,
+  boardState: BoardState[][]
+) => {
+  const newBoard = boardState.map((row) => row.map((cell) => ({ ...cell })));
+  const startPosition: boardPositions = { row: Number(start.dataset.row), column: Number(start.dataset.column) };
+  const piece = newBoard[startPosition.row][startPosition.column];
+  newBoard[move.row][move.column] = { ...piece };
+  newBoard[startPosition.row][startPosition.column].piece = undefined;
+  newBoard[startPosition.row][startPosition.column].side = undefined;
+
+  const simulatedKingPos = piece.piece === "king" ? move : kingPos;
+
+  const inCheck = isSquareUnderAttack(simulatedKingPos, side, newBoard);
+
+  return !inCheck;
 };
 
 const simulateMovements = (
@@ -27,7 +137,6 @@ const simulateMovements = (
   boardState: BoardState[][]
 ): boardPositions[] => {
   const moves: boardPositions[] = [];
-  console.log(boardState);
   switch (start.dataset.piece as Pieces) {
     case "pawn": {
       const direction = start.dataset.side === "white" ? 1 : -1;
@@ -50,7 +159,7 @@ const simulateMovements = (
           moves.push({ row: targetRow, column: targetCol });
         }
       }
-      return moves;
+      break;
     }
     case "rook": {
       const directions = [
@@ -79,7 +188,7 @@ const simulateMovements = (
         }
       }
 
-      return moves;
+      break;
     }
     case "knight": {
       const knightMoves = [
@@ -104,7 +213,7 @@ const simulateMovements = (
         }
       }
 
-      return moves;
+      break;
     }
 
     case "bishop": {
@@ -132,7 +241,7 @@ const simulateMovements = (
         }
       }
 
-      return moves;
+      break;
     }
 
     case "queen": {
@@ -164,7 +273,7 @@ const simulateMovements = (
         }
       }
 
-      return moves;
+      break;
     }
 
     case "king": {
@@ -190,7 +299,12 @@ const simulateMovements = (
         }
       }
 
-      return moves;
+      break;
     }
   }
+  const pos = getKingSquare(start.dataset.side as Sides, boardState);
+  if (pos) {
+    console.log(isSquareUnderAttack(pos, start.dataset.side as Sides, boardState));
+  }
+  return moves.filter((m) => validateSimulatedMoves(pos!, start.dataset.side as Sides, start, m, boardState));
 };
