@@ -115,24 +115,38 @@ export const validateSimulatedMoves = (
   kingPos: boardPositions,
   side: Sides,
   start: HTMLElement,
-  move: boardPositions,
+  moves: boardPositions[],
   boardState: BoardState[][]
 ) => {
-  const newBoard = boardState.map((row) => row.map((cell) => ({ ...cell })));
-  const startPosition: boardPositions = { row: Number(start.dataset.row), column: Number(start.dataset.column) };
-  const piece = newBoard[startPosition.row][startPosition.column];
-  newBoard[move.row][move.column] = { ...piece };
-  newBoard[startPosition.row][startPosition.column].piece = undefined;
-  newBoard[startPosition.row][startPosition.column].side = undefined;
+  const inChecks: boolean[] = [];
+  const validMoves: boardPositions[] = [];
+  moves.forEach((m) => {
+    const newBoard = boardState.map((row) => row.map((cell) => ({ ...cell })));
+    const startPosition: boardPositions = { row: Number(start.dataset.row), column: Number(start.dataset.column) };
+    const piece = newBoard[startPosition.row][startPosition.column];
+    newBoard[m.row][m.column] = { ...piece };
+    newBoard[startPosition.row][startPosition.column].piece = undefined;
+    newBoard[startPosition.row][startPosition.column].side = undefined;
 
-  const simulatedKingPos = piece.piece === "king" ? move : kingPos;
-
-  const inCheck = isSquareUnderAttack(simulatedKingPos, side, newBoard);
-
-  return !inCheck;
+    const simulatedKingPos = start.dataset.piece === "king" ? m : kingPos;
+    console.log(simulatedKingPos);
+    // CASE OF CASTLING
+    if (Math.abs(Number(start.dataset.column) - m.column) >= 2 && start.dataset.piece === "king") {
+      if (inChecks.includes(true)) {
+        return [];
+      }
+    }
+    inChecks.push(isSquareUnderAttack(simulatedKingPos, side, newBoard));
+  });
+  console.log(inChecks);
+  console.log(moves);
+  inChecks.forEach((r, i) => {
+    if (!r) {
+      validMoves.push(moves[i]);
+    }
+  });
+  return validMoves;
 };
-
-const shiftPiecePosition = (piece: Pieces) => {};
 
 const simulateMovements = (
   row: number,
@@ -323,9 +337,9 @@ const simulateMovements = (
           m.from.column === rookQueenside.column
       );
       if (!rookKingsideHasMoved) {
-        for (let i = 7; i === 6; i--) {
-          isSquareUnderAttack({ row: rookKingside.row, column: i }, start.dataset.side, boardState);
-        }
+        // castling allowed push the move
+
+        moves.push({ row: 1, column: 7 });
       }
 
       if (!rookQueensideHasMoved) {
@@ -335,5 +349,6 @@ const simulateMovements = (
     }
   }
   const pos = getKingSquare(start.dataset.side as Sides, boardState);
-  return moves.filter((m) => validateSimulatedMoves(pos!, start.dataset.side as Sides, start, m, boardState));
+  if (!pos) return [];
+  return validateSimulatedMoves(pos!, start.dataset.side as Sides, start, moves, boardState);
 };
