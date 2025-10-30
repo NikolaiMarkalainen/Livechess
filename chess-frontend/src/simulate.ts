@@ -33,7 +33,6 @@ export const showValidMoves = (start: HTMLElement): boardPositions[] => {
 
 export const isSquareUnderAttack = (pos: boardPositions, side: Sides, boardState: BoardState[][]): boolean => {
   const opponent = side === "white" ? "black" : "white";
-  console.log(history);
   for (let r = 1; r <= 8; r++) {
     for (let c = 1; c <= 8; c++) {
       const piece = boardState[r][c];
@@ -129,17 +128,14 @@ export const validateSimulatedMoves = (
     newBoard[startPosition.row][startPosition.column].side = undefined;
 
     const simulatedKingPos = start.dataset.piece === "king" ? m : kingPos;
-    console.log(simulatedKingPos);
     // CASE OF CASTLING
-    if (Math.abs(Number(start.dataset.column) - m.column) >= 2 && start.dataset.piece === "king") {
+    if (Math.abs(Number(start.dataset.column) - m.column) > 2 && start.dataset.piece === "king") {
       if (inChecks.includes(true)) {
         return [];
       }
     }
     inChecks.push(isSquareUnderAttack(simulatedKingPos, side, newBoard));
   });
-  console.log(inChecks);
-  console.log(moves);
   inChecks.forEach((r, i) => {
     if (!r) {
       validMoves.push(moves[i]);
@@ -319,8 +315,8 @@ const simulateMovements = (
       const kingHasMoved = history.some((m) => m.piece === "king" && m.side === start.dataset.side);
 
       if (kingHasMoved) break;
-      const rookKingside = start.dataset.side === "black" ? { row: 8, column: 8 } : { row: 1, column: 8 };
-      const rookQueenside = start.dataset.side === "black" ? { row: 8, column: 1 } : { row: 1, column: 1 };
+      const rookKingside = start.dataset.side === "black" ? { row: 8, column: 7 } : { row: 1, column: 7 };
+      const rookQueenside = start.dataset.side === "black" ? { row: 8, column: 2 } : { row: 1, column: 2 };
       const rookKingsideHasMoved = history.some(
         (m) =>
           m.piece === "rook" &&
@@ -338,11 +334,28 @@ const simulateMovements = (
       );
       if (!rookKingsideHasMoved) {
         // castling allowed push the move
-
-        moves.push({ row: 1, column: 7 });
+        let collisions: boolean[] = [];
+        for (let i = 0; i < 3; i++) {
+          if (boardState[row][col + i].piece) {
+            collisions.push(true);
+          }
+        }
+        if (!collisions.includes(true)) {
+          moves.push(rookKingside);
+        }
       }
 
       if (!rookQueensideHasMoved) {
+        let collisions: boolean[] = [];
+        for (let i = 1; i <= 3; i++) {
+          if (boardState[row][5 - i].piece) {
+            collisions.push(true);
+          }
+        }
+        console.log(collisions);
+        if (!collisions.includes(true)) {
+          moves.push(rookQueenside);
+        }
       }
       break;
       // check kingside

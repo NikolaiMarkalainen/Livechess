@@ -1,5 +1,4 @@
 import { drawCaptures } from "./draw";
-import { countDown } from "./timer";
 import type { Sides, boardPositions, Move, Pieces, Captures } from "./types";
 
 export const history: Move[] = [];
@@ -51,15 +50,23 @@ const pushNewMove = (target: HTMLElement, start: HTMLElement, capture: boolean) 
   move.piece = target.dataset.piece as Pieces;
   move.side = target.dataset.side as Sides;
 
-  if (move.piece === "king" && Number(start.dataset.column) === 5 && Number(target.dataset.column) === 7) {
+  if (move.piece === "king" && Number(start.dataset.column) === 5) {
     const rookRow = move.side === "white" ? 1 : 8;
+    let oldRookSquare;
+    let newRookSquare;
 
+    if (Number(target.dataset.column) === 7) {
+      newRookSquare = document.querySelector<HTMLDivElement>(`div[data-row="${rookRow}"][data-column="6"]`);
+      oldRookSquare = document.querySelector<HTMLDivElement>(`div[data-row="${rookRow}"][data-column="8"]`);
+    }
+    if (Number(target.dataset.column) === 2) {
+      newRookSquare = document.querySelector<HTMLDivElement>(`div[data-row="${rookRow}"][data-column="3"]`);
+      oldRookSquare = document.querySelector<HTMLDivElement>(`div[data-row="${rookRow}"][data-column="1"]`);
+    }
     // Remove rook from its original square (h1/h8)
-    const oldRookSquare = document.querySelector<HTMLDivElement>(`div[data-row="${rookRow}"][data-column="8"]`);
     removePieces(oldRookSquare!);
 
     // Place rook on its new square (f1/f8)
-    const newRookSquare = document.querySelector<HTMLDivElement>(`div[data-row="${rookRow}"][data-column="6"]`);
     newRookSquare!.dataset.piece = "rook";
     newRookSquare!.dataset.side = move.side;
     newRookSquare?.classList.add(`${move.side[0]}r`);
