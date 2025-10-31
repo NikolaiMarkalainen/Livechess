@@ -1,5 +1,5 @@
 import "./style.css";
-import { Pieces, type boardPositions, type BoardState, type IPieces, Sides, type ISides } from "./types";
+import { Pieces, type boardPositions, type BoardState, type IPieces, Sides, type ISides, type DOMPiece } from "./types";
 import { drawChessBoard, drawChessPieces, getInitialBoardMap } from "./draw";
 import { movePieceAction, history } from "./movement";
 import { formatTime } from "./timer";
@@ -24,6 +24,8 @@ const preloadPieces = () => {
   });
 };
 
+// convert dom object into object we actually use
+
 const movePiece = () => {
   const board = document.querySelector<HTMLDivElement>(".board-grid")!;
   console.log(boardState);
@@ -32,9 +34,15 @@ const movePiece = () => {
 
   board.addEventListener("dragstart", (e: DragEvent) => {
     const target = e.target as HTMLElement;
+    // easier and lighter to read instead of HTMLElement
+    const selectedPiece: DOMPiece = {
+      start: { row: Number(target.dataset.row), column: Number(target.dataset.column) },
+      piece: target.dataset.piece as IPieces,
+      side: target.dataset.side as ISides,
+    };
     const img = pieceImages[`${target.dataset.piece}-${target.dataset.side}`];
     e.dataTransfer?.setDragImage(img, 32, 32);
-    validMoves = showValidMoves(target, boardState);
+    validMoves = showValidMoves(selectedPiece, boardState);
     validMoves.forEach((m) => {
       const square = document.querySelector<HTMLDivElement>(`div[data-row="${m.row}"][data-column="${m.column}"]`);
       square?.classList.add("highlight");
@@ -76,7 +84,12 @@ const movePiece = () => {
       if (square.dataset.piece && square.dataset.side === side) {
         selectedSquare = square;
         selectedSquare.dataset.selected = "true";
-        validMoves = showValidMoves(square, boardState);
+        const selectedPiece: DOMPiece = {
+          start: { row: Number(selectedSquare.dataset.row), column: Number(selectedSquare.dataset.column) },
+          piece: selectedSquare.dataset.piece as IPieces,
+          side: selectedSquare.dataset.side as ISides,
+        };
+        validMoves = showValidMoves(selectedPiece, boardState);
         validMoves.forEach((m) => {
           const square = document.querySelector<HTMLDivElement>(`div[data-row="${m.row}"][data-column="${m.column}"]`);
           square?.classList.add("highlight");
@@ -84,7 +97,13 @@ const movePiece = () => {
       }
     } else {
       console.log(validMoves);
-      movePieceAction(square, selectedSquare, validMoves);
+      const selectedPiece: DOMPiece = {
+        start: { row: Number(selectedSquare.dataset.row), column: Number(selectedSquare.dataset.column) },
+        piece: selectedSquare.dataset.piece as IPieces,
+        side: selectedSquare.dataset.side as ISides,
+        target: { row: Number(square.dataset.row), column: Number(square.dataset.column) },
+      };
+      movePieceAction(selectedPiece, validMoves, boardState);
       delete selectedSquare.dataset.selected;
       selectedSquare = undefined;
       const highlights = document.querySelectorAll<HTMLDivElement>(`div.highlight`);
@@ -98,7 +117,7 @@ const movePiece = () => {
 
 const dragElement = (startPos: HTMLDivElement, target: HTMLElement, validMoves: boardPositions[]) => {
   startPos.dataset.selected = "true";
-  movePieceAction(target, startPos, validMoves);
+  movePieceAction(target, startPos, validMoves, boardState);
   delete startPos.dataset.selected;
   startPos.classList.remove("selected");
   return;

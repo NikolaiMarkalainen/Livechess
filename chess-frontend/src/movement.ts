@@ -1,5 +1,14 @@
 import { drawCaptures } from "./draw";
-import { type ISides, type IPieces, type boardPositions, type Move, Pieces, Sides, type Captures } from "./types";
+import {
+  type ISides,
+  type IPieces,
+  type boardPositions,
+  type Move,
+  Pieces,
+  Sides,
+  type Captures,
+  type BoardState,
+} from "./types";
 
 export const history: Move[] = [];
 export const captures: Captures[] = [
@@ -12,6 +21,8 @@ export const captures: Captures[] = [
     pieces: [],
   },
 ];
+
+const updateState = (state: BoardState[][], target: HTMLElement, start: HTMLElement) => {};
 
 const removePieces = (elem: HTMLElement) => {
   elem.classList.remove("wp", "wn", "wb", "wr", "wq", "wk", "bp", "bn", "bb", "br", "bq", "bk");
@@ -51,23 +62,23 @@ const pushNewMove = (target: HTMLElement, start: HTMLElement, capture: boolean) 
   move.piece = target.dataset.piece as IPieces;
   move.side = target.dataset.side as ISides;
 
-  if (move.piece === Pieces.King && Number(start.dataset.column) === 5) {
-    const rookRow = move.side === Sides.White ? 1 : 8;
+  //castling
+  if (move.piece === Pieces.King && Number(start.dataset.column) === 4) {
+    const rookRow = move.side === Sides.White ? 0 : 7;
     let oldRookSquare;
     let newRookSquare;
-
-    if (Number(target.dataset.column) === 7) {
+    // kingside castling
+    if (Number(target.dataset.column) === 6) {
       newRookSquare = document.querySelector<HTMLDivElement>(`div[data-row="${rookRow}"][data-column="6"]`);
       oldRookSquare = document.querySelector<HTMLDivElement>(`div[data-row="${rookRow}"][data-column="8"]`);
     }
-    if (Number(target.dataset.column) === 2) {
+    //queen side castling
+    if (Number(target.dataset.column) === 1) {
       newRookSquare = document.querySelector<HTMLDivElement>(`div[data-row="${rookRow}"][data-column="3"]`);
       oldRookSquare = document.querySelector<HTMLDivElement>(`div[data-row="${rookRow}"][data-column="1"]`);
     }
-    // Remove rook from its original square (h1/h8)
     removePieces(oldRookSquare!);
 
-    // Place rook on its new square (f1/f8)
     newRookSquare!.dataset.piece = Pieces.Rook;
     newRookSquare!.dataset.side = move.side;
     newRookSquare?.classList.add(`${move.side[0]}r`);
@@ -89,11 +100,11 @@ const pushNewMove = (target: HTMLElement, start: HTMLElement, capture: boolean) 
   history.push(move);
 };
 
-export const assignMove = (target: HTMLElement, start: HTMLElement) => {
+export const assignMove = (target: HTMLElement, start: HTMLElement, boardState: BoardState[][]) => {
   const setNewSquare = (targetSquare: HTMLElement, capture: boolean) => {
-    if (!start) return false;
     pushDataToSquare(targetSquare, start);
     pushNewMove(targetSquare, start, capture);
+    updateState(boardState);
   };
 
   if (target.dataset.piece !== undefined) {
@@ -105,7 +116,12 @@ export const assignMove = (target: HTMLElement, start: HTMLElement) => {
   }
 };
 
-export const movePieceAction = (target: HTMLElement, start: HTMLElement, validMoves: boardPositions[]) => {
+export const movePieceAction = (
+  target: HTMLElement,
+  start: HTMLElement,
+  validMoves: boardPositions[],
+  boardState: BoardState[][]
+) => {
   let turnToMove = Sides.White;
   if (history.length % 2 !== 0) {
     turnToMove = Sides.Black;
@@ -117,7 +133,7 @@ export const movePieceAction = (target: HTMLElement, start: HTMLElement, validMo
   }
   validMoves.forEach((move) => {
     if (Number(target.dataset.row) === move.row && Number(target.dataset.column) === move.column) {
-      assignMove(target, start);
+      assignMove(target, start, boardState);
     }
   });
   return;

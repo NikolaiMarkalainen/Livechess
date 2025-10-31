@@ -32,6 +32,13 @@ export const Sides: Record<string, ISides> = {
   Black: "black",
 };
 
+export type DOMPiece = {
+  start: boardPositions;
+  piece: IPieces;
+  side: ISides;
+  target?: boardPositions;
+};
+
 export type boardPositions = {
   row: number;
   column: number;
