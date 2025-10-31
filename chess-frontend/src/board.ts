@@ -22,28 +22,6 @@ const preloadPieces = () => {
   }
 };
 
-const initialBoardState: BoardState[][] = Array.from({ length: 8 }, () => Array(8).fill(null));
-
-const pieces: IPieces[] = [
-  Pieces.Rook,
-  Pieces.Knight,
-  Pieces.Bishop,
-  Pieces.Queen,
-  Pieces.King,
-  Pieces.Bishop,
-  Pieces.Knight,
-  Pieces.Rook,
-];
-
-for (let i = 0; i < 8; i++) {
-  initialBoardState[7][i] = { piece: pieces[i], side: Sides.Black };
-  initialBoardState[6][i] = { piece: Pieces.Pawn, side: Sides.Black };
-  initialBoardState[0][i] = { piece: pieces[i], side: Sides.White };
-  initialBoardState[1][i] = { piece: Pieces.Pawn, side: Sides.White };
-}
-
-console.log(initialBoardState);
-
 const movePiece = () => {
   const board = document.querySelector<HTMLDivElement>(".board-grid")!;
   let draggable: HTMLDivElement;
@@ -168,8 +146,7 @@ const startGame = (side: ISides) => {
     mainView.style.display = "none";
     gameView.style.display = "block";
     drawChessBoard(side);
-    drawChessPieces(Sides.White);
-    drawChessPieces(Sides.Black);
+    drawChessPieces();
     playerTimer = formatTime(Number(timerDuration.value));
     opponentTimer = formatTime(Number(timerDuration.value));
     const playerDiv = document.querySelector("#player-div #timer") as HTMLDivElement;
@@ -198,6 +175,6 @@ const startGame = (side: ISides) => {
 //   }
 // });
 preloadPieces();
-startGame("white");
+startGame(Sides.White);
 
 movePiece();

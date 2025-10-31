@@ -29,7 +29,7 @@ const simulateMovements = (
   switch (start.dataset.piece as IPieces) {
     case Pieces.Pawn: {
       const direction = start.dataset.side === Sides.White ? 1 : -1;
-      const startRow = start.dataset.side === Sides.White ? 2 : 7;
+      const startRow = start.dataset.side === Sides.White ? 1 : 6;
       const mvmnt: boardPositions = { row: row + 1 * direction, column: col };
       if (!boardState[mvmnt.row][mvmnt.column].piece) {
         moves.push(mvmnt);
@@ -190,8 +190,8 @@ const simulateMovements = (
       const kingHasMoved = history.some((m) => m.piece === Pieces.King && m.side === start.dataset.side);
 
       if (kingHasMoved) break;
-      const rookKingside = start.dataset.side === Sides.Black ? { row: 8, column: 7 } : { row: 1, column: 7 };
-      const rookQueenside = start.dataset.side === Sides.Black ? { row: 8, column: 2 } : { row: 1, column: 2 };
+      const rookKingside = start.dataset.side === Sides.Black ? { row: 7, column: 6 } : { row: 0, column: 6 };
+      const rookQueenside = start.dataset.side === Sides.Black ? { row: 7, column: 1 } : { row: 0, column: 1 };
       const rookKingsideHasMoved = history.some(
         (m) =>
           m.piece === Pieces.Rook &&
@@ -223,7 +223,7 @@ const simulateMovements = (
       if (!rookQueensideHasMoved) {
         let collisions: boolean[] = [];
         for (let i = 1; i <= 3; i++) {
-          if (boardState[row][5 - i].piece) {
+          if (boardState[row][5].piece) {
             collisions.push(true);
           }
         }
@@ -297,7 +297,7 @@ export const isSquareUnderAttack = (pos: boardPositions, side: ISides, boardStat
       switch (piece.piece) {
         case Pieces.Pawn: {
           const dir = opponent === Sides.White ? 1 : -1;
-          if (r + dir === pos.row && (c + 1 === pos.column || c - 1 === pos.column)) return true;
+          if (r + dir === pos.row && (c === pos.column || c === pos.column)) return true;
           break;
         }
 

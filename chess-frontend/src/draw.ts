@@ -1,96 +1,69 @@
-import { type ISides, type IPieces, type Captures, type boardPositions, Sides, Pieces } from "./types";
-export const drawChessPieces = (side: ISides) => {
-  const knightSquares: boardPositions[] =
-    side === Sides.White
-      ? [
-          { row: 1, column: 2 }, // B1
-          { row: 1, column: 7 }, // G1
-        ]
-      : [
-          { row: 8, column: 2 }, // B8
-          { row: 8, column: 7 }, // G8
-        ];
+import {
+  type ISides,
+  type IPieces,
+  type Captures,
+  type boardPositions,
+  Sides,
+  Pieces,
+  type BoardState,
+  type IDrawPieces,
+  Classes,
+} from "./types";
 
-  const bishopSquares: boardPositions[] =
-    side === Sides.White
-      ? [
-          { row: 1, column: 3 }, // C1
-          { row: 1, column: 6 }, // F1
-        ]
-      : [
-          { row: 8, column: 3 }, // C8
-          { row: 8, column: 6 }, // F8
-        ];
+export const getInitialBoardMap = (): BoardState[][] => {
+  const initialBoardState: BoardState[][] = Array.from({ length: 8 }, () => Array(8).fill(null));
 
-  const rookSquares: boardPositions[] =
-    side === Sides.White
-      ? [
-          { row: 1, column: 1 }, // A1
-          { row: 1, column: 8 }, // H1
-        ]
-      : [
-          { row: 8, column: 1 }, // A8
-          { row: 8, column: 8 }, // H8
-        ];
-
-  const queenSquare: boardPositions[] =
-    side === Sides.White
-      ? [{ row: 1, column: 4 }] // D1
-      : [{ row: 8, column: 4 }]; // D8
-
-  const kingSquare: boardPositions[] =
-    side === Sides.White
-      ? [{ row: 1, column: 5 }] // E1
-      : [{ row: 8, column: 5 }]; // E8
-
-  const pawnRow = side === Sides.White ? 2 : 7;
+  const pieces: IPieces[] = [
+    Pieces.Rook,
+    Pieces.Knight,
+    Pieces.Bishop,
+    Pieces.Queen,
+    Pieces.King,
+    Pieces.Bishop,
+    Pieces.Knight,
+    Pieces.Rook,
+  ];
 
   for (let i = 0; i < 8; i++) {
-    const square = document.querySelector(`[data-row="${pawnRow}"][data-column="${i + 1}"]`) as HTMLElement;
-    if (!square) return;
-    square.classList.add(`${side[0]}p`);
-    square.dataset.side = side;
-    square.dataset.piece = Pieces.Pawn;
+    initialBoardState[7][i] = { piece: pieces[i], side: Sides.Black };
+    initialBoardState[6][i] = { piece: Pieces.Pawn, side: Sides.Black };
+    initialBoardState[0][i] = { piece: pieces[i], side: Sides.White };
+    initialBoardState[1][i] = { piece: Pieces.Pawn, side: Sides.White };
   }
+  return initialBoardState;
+};
 
-  knightSquares.forEach((k) => {
-    const square = document.querySelector(`[data-row="${k.row}"][data-column="${k.column}"]`) as HTMLElement;
-    if (!square) return;
-    square.classList.add(`${side[0]}n`);
-    square.dataset.side = side;
-    square.dataset.piece = Pieces.Knight;
-  });
+export const drawChessPieces = () => {
+  const pieces: IDrawPieces[] = [
+    { piece: Pieces.Rook, class: Classes.Rook },
+    { piece: Pieces.Knight, class: Classes.Knight },
+    { piece: Pieces.Bishop, class: Classes.Bishop },
+    { piece: Pieces.Queen, class: Classes.Queen },
+    { piece: Pieces.King, class: Classes.King },
+    { piece: Pieces.Bishop, class: Classes.Bishop },
+    { piece: Pieces.Knight, class: Classes.Knight },
+    { piece: Pieces.Rook, class: Classes.Rook },
+  ];
+  Object.values(Sides).forEach((side) => {
+    const pr = side === Sides.White ? 1 : 6;
+    const br = side === Sides.White ? 0 : 7;
+    console.log(pr, br);
+    console.log(side);
+    for (let i = 0; i < 8; i++) {
+      const square = document.querySelector(`[data-row="${pr}"][data-column="${i}"]`) as HTMLElement;
+      console.log(square);
 
-  rookSquares.forEach((r) => {
-    const square = document.querySelector(`[data-row="${r.row}"][data-column="${r.column}"]`) as HTMLElement;
-    if (!square) return;
-    square.classList.add(`${side[0]}r`);
-    square.dataset.side = side;
-    square.dataset.piece = Pieces.Rook;
-  });
+      if (!square) return;
+      square.classList.add(`${side[0]}${Classes.Pawn}`);
+      square.dataset.side = side;
+      square.dataset.piece = Pieces.Pawn;
 
-  bishopSquares.forEach((b) => {
-    const square = document.querySelector(`[data-row="${b.row}"][data-column="${b.column}"]`) as HTMLElement;
-    if (!square) return;
-    square.classList.add(`${side[0]}b`);
-    square.dataset.side = side;
-    square.dataset.piece = Pieces.Bishop;
-  });
-
-  queenSquare.forEach((q) => {
-    const square = document.querySelector(`[data-row="${q.row}"][data-column="${q.column}"]`) as HTMLElement;
-    if (!square) return;
-    square.classList.add(`${side[0]}q`);
-    square.dataset.side = side;
-    square.dataset.piece = Pieces.Queen;
-  });
-
-  kingSquare.forEach((k) => {
-    const square = document.querySelector(`[data-row="${k.row}"][data-column="${k.column}"]`) as HTMLElement;
-    if (!square) return;
-    square.classList.add(`${side[0]}k`);
-    square.dataset.side = side;
-    square.dataset.piece = Pieces.King;
+      const square2 = document.querySelector(`[data-row="${br}"][data-column="${i}"]`) as HTMLElement;
+      if (!square2) return;
+      square2.classList.add(`${side[0]}${pieces[i].class}`);
+      square2.dataset.side = side;
+      square2.dataset.piece = pieces[i].piece;
+    }
   });
 };
 
@@ -106,11 +79,11 @@ export const drawChessBoard = (side: ISides) => {
     side === Sides.Black ? row-- : row++
   ) {
     const numberBox = document.createElement("p");
-    numberBox.textContent = (8 - row).toString();
+    numberBox.textContent = (7 - row).toString();
     for (let column = 0; column < 8; column++) {
       const square = document.createElement("div");
-      square.dataset.row = `${8 - row}`;
-      square.dataset.column = `${1 + column}`;
+      square.dataset.row = `${7 - row}`;
+      square.dataset.column = `${column}`;
       square.draggable = true;
 
       if ((row + column) % 2 === 0) {

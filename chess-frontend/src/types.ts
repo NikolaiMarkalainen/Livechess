@@ -2,7 +2,7 @@ export type IPieces = "knight" | "bishop" | "rook" | "queen" | "king" | "pawn";
 
 export type ISides = "white" | "black";
 
-// export type IPieceClasses = "wp" | "wn" | "wb" | "wr" | "wq" | "wk" | "bp" | "bn" | "bb" | "br" | "bq" | "bk";
+export type IPieceClasses = "p" | "n" | "b" | "r" | "q" | "k";
 
 export const Pieces: Record<string, IPieces> = {
   Knight: "knight",
@@ -11,6 +11,20 @@ export const Pieces: Record<string, IPieces> = {
   Queen: "queen",
   King: "king",
   Pawn: "pawn",
+};
+
+export const Classes: Record<string, IPieceClasses> = {
+  Pawn: "p",
+  Knight: "n",
+  Bishop: "b",
+  Rook: "r",
+  Queen: "q",
+  King: "k",
+};
+
+export type IDrawPieces = {
+  piece: IPieces;
+  class: IPieceClasses;
 };
 
 export const Sides: Record<string, ISides> = {
