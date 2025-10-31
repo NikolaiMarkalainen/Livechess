@@ -1,5 +1,5 @@
 import "./style.css";
-import type { boardPositions, Sides } from "./types";
+import { Pieces, type boardPositions, type BoardState, type IPieces, Sides, type ISides } from "./types";
 import { drawChessBoard, drawChessPieces } from "./draw";
 import { movePieceAction, history } from "./movement";
 import { formatTime } from "./timer";
@@ -21,6 +21,28 @@ const preloadPieces = () => {
     }
   }
 };
+
+const initialBoardState: BoardState[][] = Array.from({ length: 8 }, () => Array(8).fill(null));
+
+const pieces: IPieces[] = [
+  Pieces.Rook,
+  Pieces.Knight,
+  Pieces.Bishop,
+  Pieces.Queen,
+  Pieces.King,
+  Pieces.Bishop,
+  Pieces.Knight,
+  Pieces.Rook,
+];
+
+for (let i = 0; i < 8; i++) {
+  initialBoardState[7][i] = { piece: pieces[i], side: Sides.Black };
+  initialBoardState[6][i] = { piece: Pieces.Pawn, side: Sides.Black };
+  initialBoardState[0][i] = { piece: pieces[i], side: Sides.White };
+  initialBoardState[1][i] = { piece: Pieces.Pawn, side: Sides.White };
+}
+
+console.log(initialBoardState);
 
 const movePiece = () => {
   const board = document.querySelector<HTMLDivElement>(".board-grid")!;
@@ -65,7 +87,7 @@ const movePiece = () => {
   });
 
   board.addEventListener("click", (e) => {
-    const side = history.length % 2 !== 0 ? "black" : "white";
+    const side = history.length % 2 !== 0 ? Sides.Black : Sides.White;
     let square = e.target as HTMLElement | null;
     if (!square) return;
 
@@ -138,7 +160,7 @@ board.innerHTML = `
   </div>
 `;
 
-const startGame = (side: Sides) => {
+const startGame = (side: ISides) => {
   const mainView = document.querySelector(".board-start") as HTMLElement;
   const gameView = document.querySelector(".board-field") as HTMLElement;
   const timerDuration = document.getElementById("time-select") as HTMLSelectElement;
@@ -146,8 +168,8 @@ const startGame = (side: Sides) => {
     mainView.style.display = "none";
     gameView.style.display = "block";
     drawChessBoard(side);
-    drawChessPieces("white");
-    drawChessPieces("black");
+    drawChessPieces(Sides.White);
+    drawChessPieces(Sides.Black);
     playerTimer = formatTime(Number(timerDuration.value));
     opponentTimer = formatTime(Number(timerDuration.value));
     const playerDiv = document.querySelector("#player-div #timer") as HTMLDivElement;

@@ -1,17 +1,5 @@
-import type { boardPositions, BoardState, Pieces, Sides } from "./types";
+import { Pieces, Sides, type boardPositions, type BoardState, type IPieces, type ISides } from "./types";
 import { history } from "./movement";
-
-export const getKingSquare = (side: Sides, boardState: BoardState[][]): boardPositions | undefined => {
-  for (let r = 1; r <= 8; r++) {
-    for (let c = 1; c <= 8; c++) {
-      const pos = boardState[r][c];
-      if (pos.piece === "king" && pos.side === side) {
-        return { row: r, column: c };
-      }
-    }
-  }
-  return undefined;
-};
 
 export const showValidMoves = (start: HTMLElement): boardPositions[] => {
   if (!start.dataset.piece) return [];
@@ -24,124 +12,11 @@ export const showValidMoves = (start: HTMLElement): boardPositions[] => {
     const row = Number(div.dataset.row);
     const col = Number(div.dataset.column);
     boardState[row][col] = {
-      piece: div.dataset.piece as Pieces | undefined,
-      side: div.dataset.side as Sides | undefined,
+      piece: div.dataset.piece as IPieces | undefined,
+      side: div.dataset.side as ISides | undefined,
     };
   });
   return simulateMovements(row, col, start, boardState);
-};
-
-export const isSquareUnderAttack = (pos: boardPositions, side: Sides, boardState: BoardState[][]): boolean => {
-  const opponent = side === "white" ? "black" : "white";
-  for (let r = 1; r <= 8; r++) {
-    for (let c = 1; c <= 8; c++) {
-      const piece = boardState[r][c];
-      if (!piece?.piece || piece.side !== opponent) continue;
-
-      switch (piece.piece) {
-        case "pawn": {
-          const dir = opponent === "white" ? 1 : -1;
-          if (r + dir === pos.row && (c + 1 === pos.column || c - 1 === pos.column)) return true;
-          break;
-        }
-
-        case "knight": {
-          const knightMoves = [
-            { dr: 2, dc: 1 },
-            { dr: 2, dc: -1 },
-            { dr: -2, dc: 1 },
-            { dr: -2, dc: -1 },
-            { dr: 1, dc: 2 },
-            { dr: 1, dc: -2 },
-            { dr: -1, dc: 2 },
-            { dr: -1, dc: -2 },
-          ];
-          for (const { dr, dc } of knightMoves) {
-            if (r + dr === pos.row && c + dc === pos.column) return true;
-          }
-          break;
-        }
-
-        case "bishop":
-        case "rook":
-        case "queen": {
-          const directions: { dr: number; dc: number }[] = [];
-
-          if (piece.piece === "bishop" || piece.piece === "queen")
-            directions.push({ dr: 1, dc: 1 }, { dr: 1, dc: -1 }, { dr: -1, dc: 1 }, { dr: -1, dc: -1 });
-
-          if (piece.piece === "rook" || piece.piece === "queen")
-            directions.push({ dr: 1, dc: 0 }, { dr: -1, dc: 0 }, { dr: 0, dc: 1 }, { dr: 0, dc: -1 });
-
-          for (const { dr, dc } of directions) {
-            let rr = r + dr;
-            let cc = c + dc;
-            while (rr >= 1 && rr <= 8 && cc >= 1 && cc <= 8) {
-              const target = boardState[rr][cc];
-              if (rr === pos.row && cc === pos.column) return true;
-              if (target?.piece) break; // blocked
-              rr += dr;
-              cc += dc;
-            }
-          }
-          break;
-        }
-
-        case "king": {
-          const kingDirs = [
-            { dr: 1, dc: 0 },
-            { dr: -1, dc: 0 },
-            { dr: 0, dc: 1 },
-            { dr: 0, dc: -1 },
-            { dr: 1, dc: 1 },
-            { dr: 1, dc: -1 },
-            { dr: -1, dc: 1 },
-            { dr: -1, dc: -1 },
-          ];
-          for (const { dr, dc } of kingDirs) {
-            if (r + dr === pos.row && c + dc === pos.column) return true;
-          }
-          break;
-        }
-      }
-    }
-  }
-
-  return false;
-};
-
-export const validateSimulatedMoves = (
-  kingPos: boardPositions,
-  side: Sides,
-  start: HTMLElement,
-  moves: boardPositions[],
-  boardState: BoardState[][]
-) => {
-  const inChecks: boolean[] = [];
-  const validMoves: boardPositions[] = [];
-  moves.forEach((m) => {
-    const newBoard = boardState.map((row) => row.map((cell) => ({ ...cell })));
-    const startPosition: boardPositions = { row: Number(start.dataset.row), column: Number(start.dataset.column) };
-    const piece = newBoard[startPosition.row][startPosition.column];
-    newBoard[m.row][m.column] = { ...piece };
-    newBoard[startPosition.row][startPosition.column].piece = undefined;
-    newBoard[startPosition.row][startPosition.column].side = undefined;
-
-    const simulatedKingPos = start.dataset.piece === "king" ? m : kingPos;
-    // CASE OF CASTLING
-    if (Math.abs(Number(start.dataset.column) - m.column) > 2 && start.dataset.piece === "king") {
-      if (inChecks.includes(true)) {
-        return [];
-      }
-    }
-    inChecks.push(isSquareUnderAttack(simulatedKingPos, side, newBoard));
-  });
-  inChecks.forEach((r, i) => {
-    if (!r) {
-      validMoves.push(moves[i]);
-    }
-  });
-  return validMoves;
 };
 
 const simulateMovements = (
@@ -151,10 +26,10 @@ const simulateMovements = (
   boardState: BoardState[][]
 ): boardPositions[] => {
   const moves: boardPositions[] = [];
-  switch (start.dataset.piece as Pieces) {
-    case "pawn": {
-      const direction = start.dataset.side === "white" ? 1 : -1;
-      const startRow = start.dataset.side === "white" ? 2 : 7;
+  switch (start.dataset.piece as IPieces) {
+    case Pieces.Pawn: {
+      const direction = start.dataset.side === Sides.White ? 1 : -1;
+      const startRow = start.dataset.side === Sides.White ? 2 : 7;
       const mvmnt: boardPositions = { row: row + 1 * direction, column: col };
       if (!boardState[mvmnt.row][mvmnt.column].piece) {
         moves.push(mvmnt);
@@ -175,7 +50,7 @@ const simulateMovements = (
       }
       break;
     }
-    case "rook": {
+    case Pieces.Rook: {
       const directions = [
         { dr: 1, dc: 0 },
         { dr: -1, dc: 0 },
@@ -204,7 +79,7 @@ const simulateMovements = (
 
       break;
     }
-    case "knight": {
+    case Pieces.Knight: {
       const knightMoves = [
         { dr: 2, dc: 1 },
         { dr: 2, dc: -1 },
@@ -230,7 +105,7 @@ const simulateMovements = (
       break;
     }
 
-    case "bishop": {
+    case Pieces.Bishop: {
       const directions = [
         { dr: 1, dc: 1 },
         { dr: 1, dc: -1 },
@@ -258,7 +133,7 @@ const simulateMovements = (
       break;
     }
 
-    case "queen": {
+    case Pieces.Queen: {
       const directions = [
         { dr: 1, dc: 0 },
         { dr: -1, dc: 0 },
@@ -290,7 +165,7 @@ const simulateMovements = (
       break;
     }
 
-    case "king": {
+    case Pieces.King: {
       const directions = [
         { dr: 1, dc: 0 },
         { dr: -1, dc: 0 },
@@ -312,14 +187,14 @@ const simulateMovements = (
           moves.push({ row: r, column: c });
         }
       }
-      const kingHasMoved = history.some((m) => m.piece === "king" && m.side === start.dataset.side);
+      const kingHasMoved = history.some((m) => m.piece === Pieces.King && m.side === start.dataset.side);
 
       if (kingHasMoved) break;
-      const rookKingside = start.dataset.side === "black" ? { row: 8, column: 7 } : { row: 1, column: 7 };
-      const rookQueenside = start.dataset.side === "black" ? { row: 8, column: 2 } : { row: 1, column: 2 };
+      const rookKingside = start.dataset.side === Sides.Black ? { row: 8, column: 7 } : { row: 1, column: 7 };
+      const rookQueenside = start.dataset.side === Sides.Black ? { row: 8, column: 2 } : { row: 1, column: 2 };
       const rookKingsideHasMoved = history.some(
         (m) =>
-          m.piece === "rook" &&
+          m.piece === Pieces.Rook &&
           m.side === start.dataset.side &&
           m.from.row === rookKingside.row &&
           m.from.column === rookKingside.column
@@ -327,7 +202,7 @@ const simulateMovements = (
 
       const rookQueensideHasMoved = history.some(
         (m) =>
-          m.piece === "rook" &&
+          m.piece === Pieces.Rook &&
           m.side === start.dataset.side &&
           m.from.row === rookQueenside.row &&
           m.from.column === rookQueenside.column
@@ -361,7 +236,132 @@ const simulateMovements = (
       // check kingside
     }
   }
-  const pos = getKingSquare(start.dataset.side as Sides, boardState);
+  const pos = getKingSquare(start.dataset.side as ISides, boardState);
   if (!pos) return [];
-  return validateSimulatedMoves(pos!, start.dataset.side as Sides, start, moves, boardState);
+  return validateSimulatedMoves(pos!, start.dataset.side as ISides, start, moves, boardState);
+};
+
+export const getKingSquare = (side: ISides, boardState: BoardState[][]): boardPositions | undefined => {
+  for (let r = 1; r <= 8; r++) {
+    for (let c = 1; c <= 8; c++) {
+      const pos = boardState[r][c];
+      if (pos.piece === Pieces.King && pos.side === side) {
+        return { row: r, column: c };
+      }
+    }
+  }
+  return undefined;
+};
+
+export const validateSimulatedMoves = (
+  kingPos: boardPositions,
+  side: ISides,
+  start: HTMLElement,
+  moves: boardPositions[],
+  boardState: BoardState[][]
+) => {
+  const inChecks: boolean[] = [];
+  const validMoves: boardPositions[] = [];
+  moves.forEach((m) => {
+    const newBoard = boardState.map((row) => row.map((cell) => ({ ...cell })));
+    const startPosition: boardPositions = { row: Number(start.dataset.row), column: Number(start.dataset.column) };
+    const piece = newBoard[startPosition.row][startPosition.column];
+    newBoard[m.row][m.column] = { ...piece };
+    newBoard[startPosition.row][startPosition.column].piece = undefined;
+    newBoard[startPosition.row][startPosition.column].side = undefined;
+
+    const simulatedKingPos = start.dataset.piece === Pieces.King ? m : kingPos;
+    // CASE OF CASTLING
+    if (Math.abs(Number(start.dataset.column) - m.column) > 2 && start.dataset.piece === Pieces.King) {
+      if (inChecks.includes(true)) {
+        return [];
+      }
+    }
+    inChecks.push(isSquareUnderAttack(simulatedKingPos, side, newBoard));
+  });
+  inChecks.forEach((r, i) => {
+    if (!r) {
+      validMoves.push(moves[i]);
+    }
+  });
+  return validMoves;
+};
+
+export const isSquareUnderAttack = (pos: boardPositions, side: ISides, boardState: BoardState[][]): boolean => {
+  const opponent = side === Sides.White ? Sides.Black : Sides.White;
+  for (let r = 1; r <= 8; r++) {
+    for (let c = 1; c <= 8; c++) {
+      const piece = boardState[r][c];
+      if (!piece?.piece || piece.side !== opponent) continue;
+
+      switch (piece.piece) {
+        case Pieces.Pawn: {
+          const dir = opponent === Sides.White ? 1 : -1;
+          if (r + dir === pos.row && (c + 1 === pos.column || c - 1 === pos.column)) return true;
+          break;
+        }
+
+        case Pieces.Knight: {
+          const knightMoves = [
+            { dr: 2, dc: 1 },
+            { dr: 2, dc: -1 },
+            { dr: -2, dc: 1 },
+            { dr: -2, dc: -1 },
+            { dr: 1, dc: 2 },
+            { dr: 1, dc: -2 },
+            { dr: -1, dc: 2 },
+            { dr: -1, dc: -2 },
+          ];
+          for (const { dr, dc } of knightMoves) {
+            if (r + dr === pos.row && c + dc === pos.column) return true;
+          }
+          break;
+        }
+
+        case Pieces.Bishop:
+        case Pieces.Rook:
+        case Pieces.Queen: {
+          const directions: { dr: number; dc: number }[] = [];
+
+          if (piece.piece === Pieces.Bishop || piece.piece === Pieces.Queen)
+            directions.push({ dr: 1, dc: 1 }, { dr: 1, dc: -1 }, { dr: -1, dc: 1 }, { dr: -1, dc: -1 });
+
+          if (piece.piece === Pieces.Rook || piece.piece === Pieces.Queen)
+            directions.push({ dr: 1, dc: 0 }, { dr: -1, dc: 0 }, { dr: 0, dc: 1 }, { dr: 0, dc: -1 });
+
+          for (const { dr, dc } of directions) {
+            let rr = r + dr;
+            let cc = c + dc;
+            while (rr >= 1 && rr <= 8 && cc >= 1 && cc <= 8) {
+              const target = boardState[rr][cc];
+              if (rr === pos.row && cc === pos.column) return true;
+              if (target?.piece) break; // blocked
+              rr += dr;
+              cc += dc;
+            }
+          }
+          break;
+        }
+
+        case Pieces.King: {
+          const kingDirs = [
+            { dr: 1, dc: 0 },
+            { dr: -1, dc: 0 },
+            { dr: 0, dc: 1 },
+            { dr: 0, dc: -1 },
+            { dr: 1, dc: 1 },
+            { dr: 1, dc: -1 },
+            { dr: -1, dc: 1 },
+            { dr: -1, dc: -1 },
+          ];
+          for (const { dr, dc } of kingDirs) {
+            if (r + dr === pos.row && c + dc === pos.column) return true;
+          }
+          break;
+        }
+      }
+    }
+  }
+
+  return false;
 };
