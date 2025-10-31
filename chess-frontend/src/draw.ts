@@ -51,8 +51,6 @@ export const drawChessPieces = () => {
     console.log(side);
     for (let i = 0; i < 8; i++) {
       const square = document.querySelector(`[data-row="${pr}"][data-column="${i}"]`) as HTMLElement;
-      console.log(square);
-
       if (!square) return;
       square.classList.add(`${side[0]}${Classes.Pawn}`);
       square.dataset.side = side;

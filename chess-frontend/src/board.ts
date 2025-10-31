@@ -1,6 +1,6 @@
 import "./style.css";
 import { Pieces, type boardPositions, type BoardState, type IPieces, Sides, type ISides } from "./types";
-import { drawChessBoard, drawChessPieces } from "./draw";
+import { drawChessBoard, drawChessPieces, getInitialBoardMap } from "./draw";
 import { movePieceAction, history } from "./movement";
 import { formatTime } from "./timer";
 import { showValidMoves } from "./simulate";
@@ -9,21 +9,24 @@ const board = document.querySelector<HTMLDivElement>("#board")!;
 let playerTimer;
 let opponentTimer;
 let validMoves: boardPositions[];
+const boardState: BoardState[][] = getInitialBoardMap();
+
 const pieceImages: Record<string, HTMLImageElement> = {};
 
 const preloadPieces = () => {
-  for (const side of ["white", "black"]) {
-    for (const piece of ["pawn", "rook", "knight", "bishop", "queen", "king"]) {
+  Object.values(Sides).forEach((side) => {
+    Object.values(Pieces).forEach((piece) => {
       const key = `${piece}-${side}`;
       const img = new Image();
       img.src = `/pieces/${key}.png`;
       pieceImages[key] = img;
-    }
-  }
+    });
+  });
 };
 
 const movePiece = () => {
   const board = document.querySelector<HTMLDivElement>(".board-grid")!;
+  console.log(boardState);
   let draggable: HTMLDivElement;
   let selectedSquare: HTMLElement | undefined;
 
@@ -31,7 +34,7 @@ const movePiece = () => {
     const target = e.target as HTMLElement;
     const img = pieceImages[`${target.dataset.piece}-${target.dataset.side}`];
     e.dataTransfer?.setDragImage(img, 32, 32);
-    validMoves = showValidMoves(target);
+    validMoves = showValidMoves(target, boardState);
     validMoves.forEach((m) => {
       const square = document.querySelector<HTMLDivElement>(`div[data-row="${m.row}"][data-column="${m.column}"]`);
       square?.classList.add("highlight");
@@ -73,7 +76,7 @@ const movePiece = () => {
       if (square.dataset.piece && square.dataset.side === side) {
         selectedSquare = square;
         selectedSquare.dataset.selected = "true";
-        validMoves = showValidMoves(square);
+        validMoves = showValidMoves(square, boardState);
         validMoves.forEach((m) => {
           const square = document.querySelector<HTMLDivElement>(`div[data-row="${m.row}"][data-column="${m.column}"]`);
           square?.classList.add("highlight");
