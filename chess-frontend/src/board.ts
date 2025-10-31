@@ -1,5 +1,5 @@
 import "./style.css";
-import { Pieces, type boardPositions, type BoardState, type IPieces, Sides, type ISides, type DOMPiece } from "./types";
+import { Pieces, type boardPositions, type BoardState, type IPieces, Sides, type ISides, DOMPiece } from "./types";
 import { drawChessBoard, drawChessPieces, getInitialBoardMap } from "./draw";
 import { movePieceAction, history } from "./movement";
 import { formatTime } from "./timer";
@@ -30,16 +30,16 @@ const movePiece = () => {
   const board = document.querySelector<HTMLDivElement>(".board-grid")!;
   console.log(boardState);
   let draggable: HTMLDivElement;
+  const selectedPiece = new DOMPiece();
+  const targetSquare = new DOMPiece();
   let selectedSquare: HTMLElement | undefined;
 
   board.addEventListener("dragstart", (e: DragEvent) => {
     const target = e.target as HTMLElement;
     // easier and lighter to read instead of HTMLElement
-    const selectedPiece: DOMPiece = {
-      start: { row: Number(target.dataset.row), column: Number(target.dataset.column) },
-      piece: target.dataset.piece as IPieces,
-      side: target.dataset.side as ISides,
-    };
+    selectedPiece.pos = { row: Number(target.dataset.row), column: Number(target.dataset.column) };
+    selectedPiece.piece = target.dataset.piece as IPieces;
+    selectedPiece.side = target.dataset.side as ISides;
     const img = pieceImages[`${target.dataset.piece}-${target.dataset.side}`];
     e.dataTransfer?.setDragImage(img, 32, 32);
     validMoves = showValidMoves(selectedPiece, boardState);
@@ -72,7 +72,10 @@ const movePiece = () => {
     e.preventDefault();
     const target = e.target as HTMLElement;
     if (!target) return;
-    dragElement(draggable, target, validMoves);
+    targetSquare.pos = { row: Number(target.dataset.row), column: Number(target.dataset.column) };
+    targetSquare.piece = target.dataset.piece as IPieces;
+    targetSquare.side = target.dataset.side as ISides;
+    dragElement(draggable, selectedPiece, targetSquare, validMoves);
   });
 
   board.addEventListener("click", (e) => {
@@ -84,11 +87,12 @@ const movePiece = () => {
       if (square.dataset.piece && square.dataset.side === side) {
         selectedSquare = square;
         selectedSquare.dataset.selected = "true";
-        const selectedPiece: DOMPiece = {
-          start: { row: Number(selectedSquare.dataset.row), column: Number(selectedSquare.dataset.column) },
-          piece: selectedSquare.dataset.piece as IPieces,
-          side: selectedSquare.dataset.side as ISides,
+        selectedPiece.pos = {
+          row: Number(selectedSquare.dataset.row),
+          column: Number(selectedSquare.dataset.column),
         };
+        selectedPiece.piece = selectedSquare.dataset.piece as IPieces;
+        selectedPiece.side = selectedSquare.dataset.side as ISides;
         validMoves = showValidMoves(selectedPiece, boardState);
         validMoves.forEach((m) => {
           const square = document.querySelector<HTMLDivElement>(`div[data-row="${m.row}"][data-column="${m.column}"]`);
@@ -96,14 +100,13 @@ const movePiece = () => {
         });
       }
     } else {
-      console.log(validMoves);
-      const selectedPiece: DOMPiece = {
-        start: { row: Number(selectedSquare.dataset.row), column: Number(selectedSquare.dataset.column) },
-        piece: selectedSquare.dataset.piece as IPieces,
-        side: selectedSquare.dataset.side as ISides,
-        target: { row: Number(square.dataset.row), column: Number(square.dataset.column) },
+      targetSquare.pos = {
+        row: Number(square.dataset.row),
+        column: Number(square.dataset.column),
       };
-      movePieceAction(selectedPiece, validMoves, boardState);
+      targetSquare.piece = square.dataset.piece as IPieces;
+      targetSquare.side = square.dataset.side as ISides;
+      movePieceAction(selectedPiece, targetSquare, validMoves, boardState);
       delete selectedSquare.dataset.selected;
       selectedSquare = undefined;
       const highlights = document.querySelectorAll<HTMLDivElement>(`div.highlight`);
@@ -115,9 +118,14 @@ const movePiece = () => {
   });
 };
 
-const dragElement = (startPos: HTMLDivElement, target: HTMLElement, validMoves: boardPositions[]) => {
+const dragElement = (
+  startPos: HTMLDivElement,
+  selectedPiece: DOMPiece,
+  targetSquare: DOMPiece,
+  validMoves: boardPositions[]
+) => {
   startPos.dataset.selected = "true";
-  movePieceAction(target, startPos, validMoves, boardState);
+  movePieceAction(selectedPiece, targetSquare, validMoves, boardState);
   delete startPos.dataset.selected;
   startPos.classList.remove("selected");
   return;
@@ -197,6 +205,6 @@ const startGame = (side: ISides) => {
 //   }
 // });
 preloadPieces();
-startGame(Sides.White);
+startGame(Sides.Black);
 
 movePiece();

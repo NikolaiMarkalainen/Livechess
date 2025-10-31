@@ -3,11 +3,12 @@ import {
   type ISides,
   type IPieces,
   type boardPositions,
-  type Move,
+  Move,
   Pieces,
   Sides,
   type Captures,
   type BoardState,
+  DOMPiece,
 } from "./types";
 
 export const history: Move[] = [];
@@ -22,8 +23,6 @@ export const captures: Captures[] = [
   },
 ];
 
-const updateState = (state: BoardState[][], target: HTMLElement, start: HTMLElement) => {};
-
 const removePieces = (elem: HTMLElement) => {
   elem.classList.remove("wp", "wn", "wb", "wr", "wq", "wk", "bp", "bn", "bb", "br", "bq", "bk");
   if (elem.dataset.side && elem.dataset.piece) {
@@ -34,46 +33,48 @@ const removePieces = (elem: HTMLElement) => {
 };
 
 // clear out data from target and add new from start
-const pushDataToSquare = (target: HTMLElement, start: HTMLElement) => {
+const pushDataToSquare = (start: DOMPiece, end: DOMPiece) => {
   let knight;
-  if (start.dataset.piece === Pieces.Knight) {
+  if (start.piece === Pieces.Knight) {
     knight = "n";
   }
-  removePieces(target);
-  target.dataset.piece = start.dataset.piece;
-  target.dataset.side = start.dataset.side;
-  target.classList.add(`${start.dataset.side![0]}${knight ?? start.dataset.piece![0]}`);
-  removePieces(start);
-  clearSelected(start);
+  const startDOM = document.querySelector<HTMLDivElement>(
+    `div[data-row="${start.pos.row}"][data-column="${start.pos.column}"]`
+  );
+  const endDOM = document.querySelector<HTMLDivElement>(
+    `div[data-row="${end.pos.row}"][data-column="${end.pos.column}"]`
+  );
+  if (startDOM && endDOM) {
+    removePieces(endDOM);
+    endDOM.dataset.piece = start.piece;
+    endDOM.dataset.side = start.side;
+    endDOM.classList.add(`${start.side[0]}${knight ?? start.piece[0]}`);
+    removePieces(startDOM);
+    clearSelected(startDOM);
+  }
 };
 
 const clearSelected = (start: HTMLElement) => {
   delete start.dataset.selected;
 };
 
-const pushNewMove = (target: HTMLElement, start: HTMLElement, capture: boolean) => {
-  let move: Move = {
-    from: { row: 1, column: 1 },
-    to: { row: 1, column: 1 },
-    piece: "" as IPieces,
-    captured: undefined,
-    side: "" as ISides,
-  };
-  move.piece = target.dataset.piece as IPieces;
-  move.side = target.dataset.side as ISides;
+const pushNewMove = (start: DOMPiece, end: DOMPiece, capture: boolean) => {
+  let move = new Move();
+  move.piece = end.piece as IPieces;
+  move.side = end.side as ISides;
 
   //castling
-  if (move.piece === Pieces.King && Number(start.dataset.column) === 4) {
+  if (move.piece === Pieces.King && Number(start.pos.column) === 4) {
     const rookRow = move.side === Sides.White ? 0 : 7;
     let oldRookSquare;
     let newRookSquare;
     // kingside castling
-    if (Number(target.dataset.column) === 6) {
-      newRookSquare = document.querySelector<HTMLDivElement>(`div[data-row="${rookRow}"][data-column="6"]`);
-      oldRookSquare = document.querySelector<HTMLDivElement>(`div[data-row="${rookRow}"][data-column="8"]`);
+    if (end.pos.column === 6) {
+      newRookSquare = document.querySelector<HTMLDivElement>(`div[data-row="${rookRow}"][data-column="5"]`);
+      oldRookSquare = document.querySelector<HTMLDivElement>(`div[data-row="${rookRow}"][data-column="7"]`);
     }
     //queen side castling
-    if (Number(target.dataset.column) === 1) {
+    if (end.pos.column === 1) {
       newRookSquare = document.querySelector<HTMLDivElement>(`div[data-row="${rookRow}"][data-column="3"]`);
       oldRookSquare = document.querySelector<HTMLDivElement>(`div[data-row="${rookRow}"][data-column="1"]`);
     }
@@ -84,13 +85,13 @@ const pushNewMove = (target: HTMLElement, start: HTMLElement, capture: boolean) 
     newRookSquare?.classList.add(`${move.side[0]}r`);
   }
 
-  move.from = { row: Number(start.dataset.row), column: Number(start.dataset.column) };
-  move.to = { row: Number(target.dataset.row), column: Number(target.dataset.column) };
+  move.from = { row: start.pos.row, column: start.pos.column };
+  move.to = { row: end.pos.row, column: end.pos.column };
 
   if (capture) {
-    move.captured = target.dataset.piece! as IPieces;
+    move.captured = end.piece;
     captures
-      .find((c) => c.side === start.dataset.side)
+      .find((c) => c.side === start.side)
       ?.pieces.push({
         piece: move.captured,
         drawn: false,
@@ -100,25 +101,25 @@ const pushNewMove = (target: HTMLElement, start: HTMLElement, capture: boolean) 
   history.push(move);
 };
 
-export const assignMove = (target: HTMLElement, start: HTMLElement, boardState: BoardState[][]) => {
-  const setNewSquare = (targetSquare: HTMLElement, capture: boolean) => {
-    pushDataToSquare(targetSquare, start);
-    pushNewMove(targetSquare, start, capture);
-    updateState(boardState);
+export const assignMove = (start: DOMPiece, end: DOMPiece, boardState: BoardState[][]) => {
+  const setNewSquare = (capture: boolean) => {
+    pushDataToSquare(start, end);
+    pushNewMove(start, end, capture);
+    // updateState(boardState);
   };
 
-  if (target.dataset.piece !== undefined) {
-    if (target.dataset.side !== start.dataset.side) {
-      setNewSquare(target, true);
+  if (end.piece !== undefined) {
+    if (end.side !== start.side) {
+      setNewSquare(true);
     }
   } else {
-    setNewSquare(target, false);
+    setNewSquare(false);
   }
 };
 
 export const movePieceAction = (
-  target: HTMLElement,
-  start: HTMLElement,
+  start: DOMPiece,
+  end: DOMPiece,
   validMoves: boardPositions[],
   boardState: BoardState[][]
 ) => {
@@ -128,12 +129,12 @@ export const movePieceAction = (
   } else {
     turnToMove = Sides.White;
   }
-  if (start.dataset.side !== turnToMove) {
+  if (start.side !== turnToMove) {
     return;
   }
   validMoves.forEach((move) => {
-    if (Number(target.dataset.row) === move.row && Number(target.dataset.column) === move.column) {
-      assignMove(target, start, boardState);
+    if (end.pos.row === move.row && end.pos.column === move.column) {
+      assignMove(start, end, boardState);
     }
   });
   return;

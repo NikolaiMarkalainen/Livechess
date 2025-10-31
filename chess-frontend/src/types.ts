@@ -32,12 +32,11 @@ export const Sides: Record<string, ISides> = {
   Black: "black",
 };
 
-export type DOMPiece = {
-  start: boardPositions;
+export class DOMPiece {
+  pos: boardPositions;
   piece: IPieces;
   side: ISides;
-  target?: boardPositions;
-};
+}
 
 export type boardPositions = {
   row: number;
@@ -46,13 +45,13 @@ export type boardPositions = {
 
 export const boardValues = ["A", "B", "C", "D", "E", "F", "G", "H"];
 
-export type Move = {
+export class Move {
   from: boardPositions;
   to: boardPositions;
   piece: IPieces;
   captured?: IPieces;
   side: ISides;
-};
+}
 
 export type CapturedPiece = {
   piece: IPieces;

@@ -3,8 +3,8 @@ import { history } from "./movement";
 
 export const showValidMoves = (selectedPiece: DOMPiece, boardState: BoardState[][]): boardPositions[] => {
   const moves: boardPositions[] = [];
-  const row = selectedPiece.start.row;
-  const col = selectedPiece.start.column;
+  const row = selectedPiece.pos.row;
+  const col = selectedPiece.pos.column;
   console.log(boardState);
   switch (selectedPiece.piece) {
     case Pieces.Pawn: {
@@ -225,8 +225,10 @@ export const getKingSquare = (side: ISides, boardState: BoardState[][]): boardPo
   for (let r = 0; r < 8; r++) {
     for (let c = 0; c < 8; c++) {
       const pos = boardState[r][c];
-      if (pos.piece === Pieces.King && pos.side === side) {
-        return { row: r, column: c };
+      if (pos) {
+        if (pos.piece === Pieces.King && pos.side === side) {
+          return { row: r, column: c };
+        }
       }
     }
   }
@@ -243,7 +245,7 @@ export const validateSimulatedMoves = (
   const validMoves: boardPositions[] = [];
   moves.forEach((m) => {
     const newBoard = boardState.map((row) => row.map((cell) => ({ ...cell })));
-    const startPosition: boardPositions = { row: selectedPiece.start.row, column: selectedPiece.start.column };
+    const startPosition: boardPositions = { row: selectedPiece.pos.row, column: selectedPiece.pos.column };
     const piece = newBoard[startPosition.row][startPosition.column];
     newBoard[m.row][m.column] = { ...piece };
     newBoard[startPosition.row][startPosition.column].piece = undefined;
@@ -251,7 +253,7 @@ export const validateSimulatedMoves = (
 
     const simulatedKingPos = selectedPiece.piece === Pieces.King ? m : kingPos;
     // CASE OF CASTLING
-    if (Math.abs(selectedPiece.start.column - m.column) > 2 && selectedPiece.piece === Pieces.King) {
+    if (Math.abs(selectedPiece.pos.column - m.column) > 2 && selectedPiece.piece === Pieces.King) {
       if (inChecks.includes(true)) {
         return [];
       }
