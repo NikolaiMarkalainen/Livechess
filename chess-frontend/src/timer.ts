@@ -1,4 +1,4 @@
-import type { Sides } from "./types";
+import type { ISides } from "./types";
 
 let timerInterval: number | undefined;
 let blackTimeLeft: number = 0;
@@ -26,7 +26,8 @@ export const parseTime = (timeString: string): number => {
   return minutes * 60 + seconds + milliseconds / 100;
 };
 
-export const countDown = (side: Sides) => {
+export const countDown = (side: ISides) => {
+  console.log("what");
   const countdownDiv = document.querySelector(`[data-cside=${side}] #timer`) as HTMLDivElement;
   const rawText = countdownDiv.textContent;
 

@@ -24,11 +24,8 @@ const preloadPieces = () => {
   });
 };
 
-// convert dom object into object we actually use
-
 const movePiece = () => {
   const board = document.querySelector<HTMLDivElement>(".board-grid")!;
-  console.log(boardState);
   let draggable: HTMLDivElement;
   const selectedPiece = new DOMPiece();
   const targetSquare = new DOMPiece();
@@ -134,8 +131,8 @@ const dragElement = (
 board.innerHTML = `
   <div class="board-field">
       <div id="opponent-div" class="board-footer">
-        <div id="timer" class="countdown">⏱️ ${opponentTimer}</div> 
         <div id="pieces" class="pieces"> </div>
+        <div id="timer" class="countdown">⏱️ ${opponentTimer}</div> 
       </div>
     <div id="board-container" class="board-container">
       <div class="board-numbers"></div>
@@ -143,8 +140,8 @@ board.innerHTML = `
     </div>
     <div class="board-text"></div>
     <div id="player-div" class="board-footer">
-      <div id="timer" class="countdown-low">⏱️ ${playerTimer}</div> 
       <div id="pieces" class="pieces"></div>
+      <div id="timer" class="countdown-low">⏱️ ${playerTimer}</div> 
     </div>
   </div>
   <div class="board-start">
@@ -186,25 +183,24 @@ const startGame = (side: ISides) => {
   }
 };
 
-// document.getElementById("black-btn")?.addEventListener("click", () => {
-//   startGame("black");
-//   const playerDiv = document.getElementById("player-div") as HTMLElement;
-//   const opponentDiv = document.getElementById("opponent-div") as HTMLElement;
-//   if (playerDiv && opponentDiv) {
-//     playerDiv.dataset.cside = "black";
-//     opponentDiv.dataset.cside = "white";
-//   }
-// });
-// document.getElementById("white-btn")?.addEventListener("click", () => {
-//   startGame("white");
-//   const playerDiv = document.getElementById("player-div") as HTMLElement;
-//   const opponentDiv = document.getElementById("opponent-div") as HTMLElement;
-//   if (playerDiv && opponentDiv) {
-//     playerDiv.dataset.cside = "white";
-//     opponentDiv.dataset.cside = "black";
-//   }
-// });
+document.getElementById("black-btn")?.addEventListener("click", () => {
+  startGame(Sides.Black);
+  const playerDiv = document.getElementById("player-div") as HTMLElement;
+  const opponentDiv = document.getElementById("opponent-div") as HTMLElement;
+  if (playerDiv && opponentDiv) {
+    playerDiv.dataset.cside = "black";
+    opponentDiv.dataset.cside = "white";
+  }
+});
+document.getElementById("white-btn")?.addEventListener("click", () => {
+  startGame(Sides.White);
+  const playerDiv = document.getElementById("player-div") as HTMLElement;
+  const opponentDiv = document.getElementById("opponent-div") as HTMLElement;
+  if (playerDiv && opponentDiv) {
+    playerDiv.dataset.cside = "white";
+    opponentDiv.dataset.cside = "black";
+  }
+});
 preloadPieces();
-startGame(Sides.Black);
 
 movePiece();

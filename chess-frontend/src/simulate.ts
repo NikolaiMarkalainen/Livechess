@@ -5,7 +5,6 @@ export const showValidMoves = (selectedPiece: DOMPiece, boardState: BoardState[]
   const moves: boardPositions[] = [];
   const row = selectedPiece.pos.row;
   const col = selectedPiece.pos.column;
-  console.log(boardState);
   switch (selectedPiece.piece) {
     case Pieces.Pawn: {
       const direction = selectedPiece.side === Sides.White ? 1 : -1;
@@ -207,7 +206,6 @@ export const showValidMoves = (selectedPiece: DOMPiece, boardState: BoardState[]
             collisions.push(true);
           }
         }
-        console.log(collisions);
         if (!collisions.includes(true)) {
           moves.push(rookQueenside);
         }
@@ -265,7 +263,6 @@ export const validateSimulatedMoves = (
       validMoves.push(moves[i]);
     }
   });
-  console.log(validMoves);
   return validMoves;
 };
 

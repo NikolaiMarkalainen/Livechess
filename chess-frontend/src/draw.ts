@@ -11,7 +11,7 @@ import {
 } from "./types";
 
 export const getInitialBoardMap = (): BoardState[][] => {
-  const initialBoardState: BoardState[][] = Array.from({ length: 8 }, () => Array(8).fill(null));
+  const initialBoardState: BoardState[][] = Array.from({ length: 8 }, () => Array(8).fill(undefined));
 
   const pieces: IPieces[] = [
     Pieces.Rook,
@@ -47,8 +47,6 @@ export const drawChessPieces = () => {
   Object.values(Sides).forEach((side) => {
     const pr = side === Sides.White ? 1 : 6;
     const br = side === Sides.White ? 0 : 7;
-    console.log(pr, br);
-    console.log(side);
     for (let i = 0; i < 8; i++) {
       const square = document.querySelector(`[data-row="${pr}"][data-column="${i}"]`) as HTMLElement;
       if (!square) return;
@@ -96,6 +94,7 @@ export const drawChessBoard = (side: ISides) => {
 };
 
 export const drawCaptures = (captures: Captures[]) => {
+  console.log(captures);
   captures.forEach((capture) => {
     const opponentSide = capture.side === Sides.White ? Sides.Black : Sides.White;
     const capturesParent = document.querySelector(`[data-cside=${capture.side}] #pieces`) as HTMLDivElement;

@@ -1,4 +1,5 @@
 import { drawCaptures } from "./draw";
+import { countDown } from "./timer";
 import {
   type ISides,
   type IPieces,
@@ -26,7 +27,6 @@ export const captures: Captures[] = [
 const removePieces = (elem: HTMLElement) => {
   elem.classList.remove("wp", "wn", "wb", "wr", "wq", "wk", "bp", "bn", "bb", "br", "bq", "bk");
   if (elem.dataset.side && elem.dataset.piece) {
-    console.log(elem);
     delete elem.dataset.piece;
     delete elem.dataset.side;
   }
@@ -58,7 +58,7 @@ const clearSelected = (start: HTMLElement) => {
   delete start.dataset.selected;
 };
 
-const pushNewMove = (start: DOMPiece, end: DOMPiece, capture: boolean) => {
+const pushNewMove = (start: DOMPiece, end: DOMPiece, capture: boolean, boardState: BoardState[][]) => {
   let move = new Move();
   move.piece = end.piece as IPieces;
   move.side = end.side as ISides;
@@ -87,7 +87,6 @@ const pushNewMove = (start: DOMPiece, end: DOMPiece, capture: boolean) => {
 
   move.from = { row: start.pos.row, column: start.pos.column };
   move.to = { row: end.pos.row, column: end.pos.column };
-
   if (capture) {
     move.captured = end.piece;
     captures
@@ -99,13 +98,20 @@ const pushNewMove = (start: DOMPiece, end: DOMPiece, capture: boolean) => {
     drawCaptures(captures);
   }
   history.push(move);
+
+  // empty our array from old data and new data to end square
+  boardState[end.pos.row][end.pos.column] = {
+    piece: start.piece,
+    side: start.side,
+  };
+  boardState[start.pos.row][start.pos.column] = undefined;
+  countDown(start.side);
 };
 
 export const assignMove = (start: DOMPiece, end: DOMPiece, boardState: BoardState[][]) => {
   const setNewSquare = (capture: boolean) => {
     pushDataToSquare(start, end);
-    pushNewMove(start, end, capture);
-    // updateState(boardState);
+    pushNewMove(start, end, capture, boardState);
   };
 
   if (end.piece !== undefined) {
