@@ -22,7 +22,6 @@ export const showValidMoves = (selectedPiece: DOMPiece, boardState: BoardState[]
       // if enemy piece jumps two rows then we need to create rule for this
       const enPassantSqr = selectedPiece.side === Sides.White ? 4 : 3;
       const enPassantCptrSqr = selectedPiece.side === Sides.White ? 5 : 2;
-      console.log(enPassantSqr);
       for (const dc of [-1, 1]) {
         const targetCol = col + dc;
         const targetRow = row + direction;
@@ -30,15 +29,15 @@ export const showValidMoves = (selectedPiece: DOMPiece, boardState: BoardState[]
         if (targetSquare?.piece && targetSquare.side !== selectedPiece.side) {
           moves.push({ row: targetRow, column: targetCol });
         }
-        const latestMove = history[history.length - 1];
-        if (
-          latestMove &&
-          latestMove.piece === "pawn" &&
-          Math.abs(latestMove.from.row - latestMove.to.row) === 2 &&
-          selectedPiece.pos.row === enPassantSqr
-        ) {
-          moves.push({ row: enPassantCptrSqr, column: latestMove.to.column });
-        }
+      }
+      const latestMove = history[history.length - 1];
+      if (
+        latestMove &&
+        latestMove.piece === "pawn" &&
+        Math.abs(latestMove.from.row - latestMove.to.row) === 2 &&
+        selectedPiece.pos.row === enPassantSqr
+      ) {
+        moves.push({ row: enPassantCptrSqr, column: latestMove.to.column });
       }
       break;
     }
@@ -203,7 +202,7 @@ export const showValidMoves = (selectedPiece: DOMPiece, boardState: BoardState[]
         // castling allowed push the move
         let collisions: boolean[] = [];
         for (let i = 0; i < 3; i++) {
-          if (boardState[row][col + i].piece) {
+          if (boardState[row][col + i] && boardState[row][col + i].piece) {
             collisions.push(true);
           }
         }
@@ -215,7 +214,7 @@ export const showValidMoves = (selectedPiece: DOMPiece, boardState: BoardState[]
       if (!rookQueensideHasMoved) {
         let collisions: boolean[] = [];
         for (let i = 1; i <= 3; i++) {
-          if (boardState[row][5].piece) {
+          if (boardState[row][5] && boardState[row][5].piece) {
             collisions.push(true);
           }
         }
@@ -232,7 +231,7 @@ export const showValidMoves = (selectedPiece: DOMPiece, boardState: BoardState[]
   return validateSimulatedMoves(pos!, selectedPiece, moves, boardState);
 };
 
-export const getKingSquare = (side: ISides, boardState: BoardState[][]): boardPositions | undefined => {
+const getKingSquare = (side: ISides, boardState: BoardState[][]): boardPositions | undefined => {
   for (let r = 0; r < 8; r++) {
     for (let c = 0; c < 8; c++) {
       const pos = boardState[r][c];
@@ -246,7 +245,7 @@ export const getKingSquare = (side: ISides, boardState: BoardState[][]): boardPo
   return undefined;
 };
 
-export const validateSimulatedMoves = (
+const validateSimulatedMoves = (
   kingPos: boardPositions,
   selectedPiece: DOMPiece,
   moves: boardPositions[],
@@ -279,7 +278,7 @@ export const validateSimulatedMoves = (
   return validMoves;
 };
 
-export const isSquareUnderAttack = (pos: boardPositions, side: ISides, boardState: BoardState[][]): boolean => {
+const isSquareUnderAttack = (pos: boardPositions, side: ISides, boardState: BoardState[][]): boolean => {
   const opponent = side === Sides.White ? Sides.Black : Sides.White;
   for (let r = 0; r < 8; r++) {
     for (let c = 0; c < 8; c++) {
@@ -289,7 +288,9 @@ export const isSquareUnderAttack = (pos: boardPositions, side: ISides, boardStat
       switch (piece.piece) {
         case Pieces.Pawn: {
           const dir = opponent === Sides.White ? 1 : -1;
-          if (r + dir === pos.row && (c === pos.column || c === pos.column)) return true;
+          for (const dc of [-1, 1]) {
+            if (r + dir === pos.row && c + dc === pos.column) return true;
+          }
           break;
         }
 

@@ -1,4 +1,5 @@
 import { drawCaptures } from "./draw";
+import { isCheckMate } from "./gameover";
 import { countDown } from "./timer";
 import {
   type ISides,
@@ -116,6 +117,8 @@ const pushNewMove = (start: DOMPiece, end: DOMPiece, capture: boolean, boardStat
   };
   boardState[start.pos.row][start.pos.column] = undefined;
   countDown(start.side);
+  console.log(boardState);
+  isCheckMate(start.side === Sides.White ? Sides.Black : Sides.White, boardState);
 };
 
 export const assignMove = (start: DOMPiece, end: DOMPiece, boardState: BoardState[][]) => {

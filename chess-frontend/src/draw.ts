@@ -94,7 +94,6 @@ export const drawChessBoard = (side: ISides) => {
 };
 
 export const drawCaptures = (captures: Captures[]) => {
-  console.log(captures);
   captures.forEach((capture) => {
     const opponentSide = capture.side === Sides.White ? Sides.Black : Sides.White;
     const capturesParent = document.querySelector(`[data-cside=${capture.side}] #pieces`) as HTMLDivElement;
