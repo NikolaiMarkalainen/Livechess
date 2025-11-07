@@ -19,12 +19,25 @@ export const showValidMoves = (selectedPiece: DOMPiece, boardState: BoardState[]
           moves.push(mvmnt);
         }
       }
+      // if enemy piece jumps two rows then we need to create rule for this
+      const enPassantSqr = selectedPiece.side === Sides.White ? 4 : 3;
+      const enPassantCptrSqr = selectedPiece.side === Sides.White ? 5 : 2;
+      console.log(enPassantSqr);
       for (const dc of [-1, 1]) {
         const targetCol = col + dc;
         const targetRow = row + direction;
         const targetSquare = boardState[targetRow][targetCol];
         if (targetSquare?.piece && targetSquare.side !== selectedPiece.side) {
           moves.push({ row: targetRow, column: targetCol });
+        }
+        const latestMove = history[history.length - 1];
+        if (
+          latestMove &&
+          latestMove.piece === "pawn" &&
+          Math.abs(latestMove.from.row - latestMove.to.row) === 2 &&
+          selectedPiece.pos.row === enPassantSqr
+        ) {
+          moves.push({ row: enPassantCptrSqr, column: latestMove.to.column });
         }
       }
       break;

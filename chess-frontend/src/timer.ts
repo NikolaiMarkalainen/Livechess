@@ -27,7 +27,6 @@ export const parseTime = (timeString: string): number => {
 };
 
 export const countDown = (side: ISides) => {
-  console.log("what");
   const countdownDiv = document.querySelector(`[data-cside=${side}] #timer`) as HTMLDivElement;
   const rawText = countdownDiv.textContent;
 

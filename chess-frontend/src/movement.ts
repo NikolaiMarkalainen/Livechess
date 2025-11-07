@@ -60,9 +60,6 @@ const clearSelected = (start: HTMLElement) => {
 
 const pushNewMove = (start: DOMPiece, end: DOMPiece, capture: boolean, boardState: BoardState[][]) => {
   let move = new Move();
-  move.piece = end.piece as IPieces;
-  move.side = end.side as ISides;
-
   //castling
   if (move.piece === Pieces.King && Number(start.pos.column) === 4) {
     const rookRow = move.side === Sides.White ? 0 : 7;
@@ -85,8 +82,21 @@ const pushNewMove = (start: DOMPiece, end: DOMPiece, capture: boolean, boardStat
     newRookSquare?.classList.add(`${move.side[0]}r`);
   }
 
+  if (start.piece === Pieces.Pawn && !capture && start.pos.column !== end.pos.column) {
+    const enPassantSqr = start.side === Sides.White ? 4 : 3;
+    // delete pawn and from our state the square data
+    const delPawn = document.querySelector<HTMLDivElement>(
+      `div[data-row="${enPassantSqr}"][data-column="${end.pos.column}"]`
+    );
+    boardState[enPassantSqr][end.pos.column] = undefined;
+    removePieces(delPawn);
+  }
+
+  // populate move object with data which piece moved where ect.
   move.from = { row: start.pos.row, column: start.pos.column };
   move.to = { row: end.pos.row, column: end.pos.column };
+  move.piece = start.piece;
+  move.side = start.side;
   if (capture) {
     move.captured = end.piece;
     captures
