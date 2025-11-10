@@ -35,6 +35,7 @@ export const showValidMoves = (selectedPiece: DOMPiece, boardState: BoardState[]
         latestMove &&
         latestMove.piece === "pawn" &&
         Math.abs(latestMove.from.row - latestMove.to.row) === 2 &&
+        Math.abs(latestMove.to.column - selectedPiece.pos.column) === 1 &&
         selectedPiece.pos.row === enPassantSqr
       ) {
         moves.push({ row: enPassantCptrSqr, column: latestMove.to.column });
